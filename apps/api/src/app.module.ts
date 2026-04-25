@@ -11,6 +11,7 @@ import { ClientsModule } from './clients/clients.module';
 import { CommonModule } from './common/common.module';
 import { CoordinatorsModule } from './coordinators/coordinators.module';
 import { CoursesModule } from './courses/courses.module';
+import { EnrollmentsModule } from './enrollments/enrollments.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { StudentsModule } from './students/students.module';
 import { TrainersModule } from './trainers/trainers.module';
@@ -30,6 +31,7 @@ import { UsersModule } from './users/users.module';
     ClientsModule,
     CoursesModule,
     ClassesModule,
+    EnrollmentsModule,
   ],
   controllers: [AppController],
   providers: [
