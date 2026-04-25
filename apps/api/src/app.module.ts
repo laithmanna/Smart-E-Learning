@@ -12,11 +12,14 @@ import { ClientsModule } from './clients/clients.module';
 import { CommonModule } from './common/common.module';
 import { CoordinatorsModule } from './coordinators/coordinators.module';
 import { CoursesModule } from './courses/courses.module';
+import { DashboardModule } from './dashboard/dashboard.module';
 import { EnrollmentsModule } from './enrollments/enrollments.module';
+import { EvaluationsModule } from './evaluations/evaluations.module';
 import { ExamsModule } from './exams/exams.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { QuestionTemplatesModule } from './question-templates/question-templates.module';
 import { StudentsModule } from './students/students.module';
+import { SurveysModule } from './surveys/surveys.module';
 import { TrainersModule } from './trainers/trainers.module';
 import { UsersModule } from './users/users.module';
 
@@ -38,6 +41,9 @@ import { UsersModule } from './users/users.module';
     AttendanceModule,
     ExamsModule,
     QuestionTemplatesModule,
+    SurveysModule,
+    EvaluationsModule,
+    DashboardModule,
   ],
   controllers: [AppController],
   providers: [
