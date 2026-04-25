@@ -1,0 +1,369 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ---------- ENUMS ----------
+
+enum Role {
+  SUPER_ADMIN
+  ADMIN
+  COORDINATOR
+  TRAINER
+  STUDENT
+  CLIENT
+}
+
+enum ExamType {
+  MULTIPLE_CHOICE
+  FREE_TEXT
+}
+
+enum Gender {
+  MALE
+  FEMALE
+  OTHER
+}
+
+// ---------- USERS / AUTH ----------
+
+model User {
+  id              String   @id @default(cuid())
+  email           String   @unique
+  passwordHash    String
+  role            Role
+  isActive        Boolean  @default(true)
+  emailConfirmed  Boolean  @default(false)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  student      Student?
+  trainer      Trainer?
+  coordinator  Coordinator?
+  admin        Admin?
+  client       Client?
+  refreshTokens RefreshToken[]
+}
+
+model RefreshToken {
+  id         String    @id @default(cuid())
+  userId     String
+  tokenHash  String    @unique
+  expiresAt  DateTime
+  revokedAt  DateTime?
+  createdAt  DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+// ---------- ROLE PROFILES ----------
+
+model Student {
+  id             String    @id @default(cuid())
+  userId         String    @unique
+  name           String
+  phone          String?
+  socialId       String?
+  gender         Gender?
+  enrollmentDate DateTime  @default(now())
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  user                User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  enrollments         Enrollment[]
+  attendances         Attendance[]
+  studentAnswers      StudentAnswer[]
+  examResults         ExamResult[]
+  surveys             Survey[]
+  evaluationResponses EvaluationResponse[]
+}
+
+model Trainer {
+  id             String   @id @default(cuid())
+  userId         String   @unique
+  name           String
+  phone          String?
+  specialization String?
+  about          String?
+  photoPath      String?
+  cvPath         String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  user    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  courses Course[]
+}
+
+model Coordinator {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  name      String
+  phone     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  courses Course[]
+}
+
+model Admin {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  name      String
+  phone     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Client {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  name      String
+  phone     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  courses Course[]
+}
+
+// ---------- COURSE / CLASS ----------
+
+model Course {
+  id            String   @id @default(cuid())
+  courseName    String
+  projectName   String?
+  startDate     DateTime
+  endDate       DateTime
+  description   String?
+  location      String?
+  isClosed      Boolean  @default(false)
+  trainerId     String?
+  coordinatorId String?
+  clientId      String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  trainer     Trainer?           @relation(fields: [trainerId], references: [id])
+  coordinator Coordinator?       @relation(fields: [coordinatorId], references: [id])
+  client      Client?            @relation(fields: [clientId], references: [id])
+  classes     Class[]
+  enrollments Enrollment[]
+  exams       Exam[]
+  attachments CourseAttachment[]
+  surveys     Survey[]
+  evaluations Evaluation[]
+
+  @@index([trainerId])
+  @@index([coordinatorId])
+  @@index([clientId])
+  @@index([isClosed])
+}
+
+model Class {
+  id           String   @id @default(cuid())
+  courseId     String
+  topic        String
+  classDate    DateTime
+  startTime    String
+  endTime      String
+  location     String?
+  meetingLink  String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  course      Course       @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  attendances Attendance[]
+
+  @@index([courseId])
+}
+
+model Enrollment {
+  courseId  String
+  studentId String
+  createdAt DateTime @default(now())
+
+  course  Course  @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  student Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@id([courseId, studentId])
+  @@index([studentId])
+}
+
+model Attendance {
+  id        String   @id @default(cuid())
+  classId   String
+  studentId String
+  present   Boolean  @default(false)
+  date      DateTime
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  class   Class   @relation(fields: [classId], references: [id], onDelete: Cascade)
+  student Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@unique([classId, studentId])
+  @@index([studentId])
+}
+
+model CourseAttachment {
+  id         String   @id @default(cuid())
+  courseId   String
+  fileName   String
+  filePath   String
+  uploadedAt DateTime @default(now())
+
+  course Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  @@index([courseId])
+}
+
+// ---------- EXAMS ----------
+
+model Exam {
+  id         String   @id @default(cuid())
+  courseId   String
+  examName   String
+  examDate   DateTime
+  totalMarks Int
+  examType   ExamType
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  course    Course       @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  questions Question[]
+  results   ExamResult[]
+
+  @@index([courseId])
+}
+
+model Question {
+  id            String  @id @default(cuid())
+  examId        String
+  questionText  String
+  option1       String?
+  option2       String?
+  option3       String?
+  option4       String?
+  correctOption Int?
+
+  exam    Exam            @relation(fields: [examId], references: [id], onDelete: Cascade)
+  answers StudentAnswer[]
+
+  @@index([examId])
+}
+
+model StudentAnswer {
+  id             String   @id @default(cuid())
+  questionId     String
+  studentId      String
+  selectedOption Int?
+  textAnswer     String?
+  createdAt      DateTime @default(now())
+
+  question Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  student  Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@unique([questionId, studentId])
+  @@index([studentId])
+}
+
+model ExamResult {
+  id            String   @id @default(cuid())
+  examId        String
+  studentId     String
+  marksObtained Int
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  exam    Exam    @relation(fields: [examId], references: [id], onDelete: Cascade)
+  student Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@unique([examId, studentId])
+  @@index([studentId])
+}
+
+model QuestionTemplate {
+  id          String             @id @default(cuid())
+  title       String
+  description String?
+  createdAt   DateTime           @default(now())
+  updatedAt   DateTime           @updatedAt
+
+  questions TemplateQuestion[]
+}
+
+model TemplateQuestion {
+  id         String @id @default(cuid())
+  templateId String
+  text       String
+  type       String
+
+  template QuestionTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
+
+  @@index([templateId])
+}
+
+// ---------- FEEDBACK ----------
+
+model Survey {
+  id           String   @id @default(cuid())
+  courseId     String
+  studentId    String
+  rating       Int
+  feedback     String?
+  submittedAt  DateTime @default(now())
+
+  course  Course  @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  student Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@unique([courseId, studentId])
+  @@index([studentId])
+}
+
+model Evaluation {
+  id          String   @id @default(cuid())
+  courseId    String
+  name        String
+  isPublished Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  course    Course               @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  questions EvaluationQuestion[]
+
+  @@index([courseId])
+}
+
+model EvaluationQuestion {
+  id           String @id @default(cuid())
+  evaluationId String
+  question     String
+
+  evaluation Evaluation           @relation(fields: [evaluationId], references: [id], onDelete: Cascade)
+  responses  EvaluationResponse[]
+
+  @@index([evaluationId])
+}
+
+model EvaluationResponse {
+  id                   String   @id @default(cuid())
+  evaluationQuestionId String
+  studentId            String
+  rating               String
+  createdAt            DateTime @default(now())
+
+  question EvaluationQuestion @relation(fields: [evaluationQuestionId], references: [id], onDelete: Cascade)
+  student  Student            @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@unique([evaluationQuestionId, studentId])
+  @@index([studentId])
+}
