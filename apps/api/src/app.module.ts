@@ -13,7 +13,9 @@ import { CommonModule } from './common/common.module';
 import { CoordinatorsModule } from './coordinators/coordinators.module';
 import { CoursesModule } from './courses/courses.module';
 import { EnrollmentsModule } from './enrollments/enrollments.module';
+import { ExamsModule } from './exams/exams.module';
 import { PrismaModule } from './prisma/prisma.module';
+import { QuestionTemplatesModule } from './question-templates/question-templates.module';
 import { StudentsModule } from './students/students.module';
 import { TrainersModule } from './trainers/trainers.module';
 import { UsersModule } from './users/users.module';
@@ -34,6 +36,8 @@ import { UsersModule } from './users/users.module';
     ClassesModule,
     EnrollmentsModule,
     AttendanceModule,
+    ExamsModule,
+    QuestionTemplatesModule,
   ],
   controllers: [AppController],
   providers: [
