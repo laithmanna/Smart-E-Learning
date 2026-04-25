@@ -6,9 +6,11 @@ import { AppController } from './app.controller';
 import { AuthModule } from './auth/auth.module';
 import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
 import { RolesGuard } from './auth/guards/roles.guard';
+import { ClassesModule } from './classes/classes.module';
 import { ClientsModule } from './clients/clients.module';
 import { CommonModule } from './common/common.module';
 import { CoordinatorsModule } from './coordinators/coordinators.module';
+import { CoursesModule } from './courses/courses.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { StudentsModule } from './students/students.module';
 import { TrainersModule } from './trainers/trainers.module';
@@ -26,6 +28,8 @@ import { UsersModule } from './users/users.module';
     CoordinatorsModule,
     AdminsModule,
     ClientsModule,
+    CoursesModule,
+    ClassesModule,
   ],
   controllers: [AppController],
   providers: [
