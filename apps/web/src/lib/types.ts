@@ -212,3 +212,13 @@ export interface Trainer {
   updatedAt: string;
   user: { id: string; email: string; isActive: boolean };
 }
+
+export interface Admin {
+  id: string;
+  userId: string;
+  name: string;
+  phone: string | null;
+  createdAt: string;
+  updatedAt: string;
+  user: { id: string; email: string; isActive: boolean; role: Role };
+}

@@ -9,6 +9,7 @@ import {
   GraduationCap,
   LayoutDashboard,
   LogOut,
+  Shield,
   UserCog,
   Users,
   type LucideIcon,
@@ -65,6 +66,12 @@ const NAV: NavItem[] = [
     label: 'Clients',
     icon: Building2,
     roles: ['SUPER_ADMIN', 'ADMIN'],
+  },
+  {
+    href: '/admins',
+    label: 'Admins',
+    icon: Shield,
+    roles: ['SUPER_ADMIN'],
   },
   {
     href: '/templates',
