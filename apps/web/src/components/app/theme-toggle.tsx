@@ -8,9 +8,10 @@ import { cn } from '@/lib/utils';
 
 interface Props {
   className?: string;
+  compact?: boolean;
 }
 
-export function ThemeToggle({ className }: Props) {
+export function ThemeToggle({ className, compact }: Props) {
   const { theme, setTheme, resolvedTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
 
@@ -18,7 +19,12 @@ export function ThemeToggle({ className }: Props) {
 
   if (!mounted) {
     return (
-      <Button variant="outline" size="sm" aria-label="Theme" className={cn('w-full', className)}>
+      <Button
+        variant="outline"
+        size="sm"
+        aria-label="Theme"
+        className={cn(compact ? 'w-9 px-0' : 'w-full', className)}
+      >
         <Sun className="h-4 w-4" />
       </Button>
     );
@@ -47,10 +53,11 @@ export function ThemeToggle({ className }: Props) {
       size="sm"
       onClick={cycle}
       aria-label={`Theme: ${label}`}
-      className={cn('w-full', className)}
+      title={compact ? `Theme: ${label}` : undefined}
+      className={cn(compact ? 'w-9 px-0' : 'w-full', className)}
     >
       {icon}
-      <span>{label}</span>
+      {!compact && <span>{label}</span>}
     </Button>
   );
 }
