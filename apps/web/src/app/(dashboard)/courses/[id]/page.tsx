@@ -225,6 +225,11 @@ export default function CourseDetailPage() {
         </div>
         {canManage && (
           <div className="flex gap-2">
+            <Link href={`/courses/${course.id}/reports`}>
+              <Button size="sm" variant="outline">
+                Reports
+              </Button>
+            </Link>
             {!course.isClosed && (
               <Button size="sm" variant="outline" onClick={() => setEditCourseOpen(true)}>
                 Edit course

@@ -18,6 +18,7 @@ import { EvaluationsModule } from './evaluations/evaluations.module';
 import { ExamsModule } from './exams/exams.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { QuestionTemplatesModule } from './question-templates/question-templates.module';
+import { ReportsModule } from './reports/reports.module';
 import { StudentsModule } from './students/students.module';
 import { SurveysModule } from './surveys/surveys.module';
 import { TrainersModule } from './trainers/trainers.module';
@@ -44,6 +45,7 @@ import { UsersModule } from './users/users.module';
     SurveysModule,
     EvaluationsModule,
     DashboardModule,
+    ReportsModule,
   ],
   controllers: [AppController],
   providers: [

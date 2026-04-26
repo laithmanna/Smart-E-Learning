@@ -54,3 +54,20 @@
     @apply bg-background text-foreground;
   }
 }
+
+@media print {
+  aside,
+  nav {
+    display: none !important;
+  }
+  main {
+    overflow: visible !important;
+    padding: 0 !important;
+  }
+  body {
+    background: white !important;
+  }
+  .recharts-responsive-container {
+    page-break-inside: avoid;
+  }
+}
