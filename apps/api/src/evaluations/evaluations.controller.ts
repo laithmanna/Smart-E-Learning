@@ -30,6 +30,15 @@ export class EvaluationsController {
     return this.evaluations.create(dto);
   }
 
+  @Roles(Role.SUPER_ADMIN, Role.ADMIN, Role.COORDINATOR)
+  @Post('evaluations/from-template/:templateId')
+  createFromTemplate(
+    @Param('templateId') templateId: string,
+    @Body() body: { courseId: string; name: string },
+  ) {
+    return this.evaluations.createFromTemplate(templateId, body.courseId, body.name);
+  }
+
   @Get('evaluations')
   list(@Query('courseId') courseId: string, @CurrentUser() user: AuthenticatedUser) {
     return this.evaluations.listByCourse(courseId, user);

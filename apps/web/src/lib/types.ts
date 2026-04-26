@@ -149,6 +149,26 @@ export interface EvaluationReport {
   }[];
 }
 
+export interface QuestionTemplate {
+  id: string;
+  title: string;
+  description: string | null;
+  createdAt: string;
+  updatedAt: string;
+  _count?: { questions: number };
+}
+
+export interface TemplateQuestion {
+  id: string;
+  templateId: string;
+  text: string;
+  type: string;
+}
+
+export interface QuestionTemplateDetail extends QuestionTemplate {
+  questions: TemplateQuestion[];
+}
+
 export interface Student {
   id: string;
   name: string;

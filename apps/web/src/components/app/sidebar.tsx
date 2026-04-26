@@ -5,6 +5,7 @@ import {
   ChevronLeft,
   ChevronRight,
   ClipboardList,
+  FileText,
   GraduationCap,
   LayoutDashboard,
   LogOut,
@@ -64,6 +65,12 @@ const NAV: NavItem[] = [
     label: 'Clients',
     icon: Building2,
     roles: ['SUPER_ADMIN', 'ADMIN'],
+  },
+  {
+    href: '/templates',
+    label: 'Templates',
+    icon: FileText,
+    roles: ['SUPER_ADMIN', 'ADMIN', 'COORDINATOR', 'TRAINER'],
   },
 ];
 

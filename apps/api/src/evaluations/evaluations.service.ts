@@ -23,6 +23,30 @@ export class EvaluationsService {
     if (!course) throw new NotFoundException('Course not found');
     return this.prisma.evaluation.create({
       data: { courseId: dto.courseId, name: dto.name },
+      include: { _count: { select: { questions: true } } },
+    });
+  }
+
+  async createFromTemplate(templateId: string, courseId: string, name: string) {
+    const [template, course] = await Promise.all([
+      this.prisma.questionTemplate.findUnique({
+        where: { id: templateId },
+        include: { questions: true },
+      }),
+      this.prisma.course.findUnique({ where: { id: courseId } }),
+    ]);
+    if (!template) throw new NotFoundException('Template not found');
+    if (!course) throw new NotFoundException('Course not found');
+
+    return this.prisma.evaluation.create({
+      data: {
+        courseId,
+        name,
+        questions: {
+          create: template.questions.map((q) => ({ question: q.text })),
+        },
+      },
+      include: { _count: { select: { questions: true } } },
     });
   }
 
