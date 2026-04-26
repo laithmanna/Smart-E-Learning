@@ -3,19 +3,28 @@
 import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { useAuth } from '@/hooks/use-auth';
 import { api } from '@/lib/api';
-import type { Course } from '@/lib/types';
+import type { Course, Role } from '@/lib/types';
+import { CreateCourseDialog } from './_create-course-dialog';
+
+const CAN_CREATE: Role[] = ['SUPER_ADMIN', 'ADMIN', 'COORDINATOR'];
 
 export default function CoursesPage() {
+  const { user } = useAuth();
   const [courses, setCourses] = useState<Course[] | null>(null);
   const [showClosed, setShowClosed] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [createOpen, setCreateOpen] = useState(false);
 
   useEffect(() => {
+    setCourses(null);
     api<Course[]>(`/courses?closed=${showClosed}`)
       .then(setCourses)
       .catch((e: Error) => setError(e.message));
   }, [showClosed]);
+
+  const canCreate = user && CAN_CREATE.includes(user.role);
 
   return (
     <div className="space-y-6">
@@ -41,6 +50,11 @@ export default function CoursesPage() {
           >
             History
           </Button>
+          {canCreate && (
+            <Button size="sm" onClick={() => setCreateOpen(true)}>
+              + New course
+            </Button>
+          )}
         </div>
       </div>
 
@@ -84,6 +98,16 @@ export default function CoursesPage() {
           </Card>
         ))}
       </div>
+
+      <CreateCourseDialog
+        open={createOpen}
+        onClose={() => setCreateOpen(false)}
+        onCreated={(created) => {
+          if (!showClosed) {
+            setCourses((prev) => (prev ? [created, ...prev] : [created]));
+          }
+        }}
+      />
     </div>
   );
 }
