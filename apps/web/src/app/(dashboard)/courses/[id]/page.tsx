@@ -10,6 +10,7 @@ import { useAuth } from '@/hooks/use-auth';
 import { api } from '@/lib/api';
 import { cn, uploadUrl } from '@/lib/utils';
 import type {
+  CourseAttachment,
   CourseClass,
   CourseDetail,
   EnrollmentRow,
@@ -43,6 +44,12 @@ export default function CourseDetailPage() {
   const [editingClass, setEditingClass] = useState<CourseClass | null>(null);
   const [enrollOpen, setEnrollOpen] = useState(false);
   const [examCreateOpen, setExamCreateOpen] = useState(false);
+  const [deletingAttachment, setDeletingAttachment] = useState<
+    { id: string; fileName: string } | null
+  >(null);
+  const [deleteAttachmentBusy, setDeleteAttachmentBusy] = useState(false);
+  const [uploadBusy, setUploadBusy] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
 
   const canManage = user && CAN_MANAGE.includes(user.role);
   const canEditClass = user && CAN_EDIT_CLASS.includes(user.role);
@@ -52,6 +59,50 @@ export default function CourseDetailPage() {
     api<EnrollmentRow[]>(`/courses/${id}/students`)
       .then(setStudents)
       .catch(() => {});
+  }
+
+  async function uploadAttachment(file: File) {
+    if (!course) return;
+    setUploadBusy(true);
+    setUploadError(null);
+    const fd = new FormData();
+    fd.append('file', file);
+    try {
+      const created = await api<CourseAttachment>(
+        `/courses/${course.id}/attachments`,
+        { method: 'POST', body: fd },
+      );
+      setCourse((prev) =>
+        prev ? { ...prev, attachments: [created, ...prev.attachments] } : prev,
+      );
+    } catch (err) {
+      setUploadError(err instanceof Error ? err.message : 'Upload failed');
+    } finally {
+      setUploadBusy(false);
+    }
+  }
+
+  async function confirmDeleteAttachment() {
+    if (!deletingAttachment || !course) return;
+    setDeleteAttachmentBusy(true);
+    try {
+      await api(`/attachments/${deletingAttachment.id}`, { method: 'DELETE' });
+      setCourse((prev) =>
+        prev
+          ? {
+              ...prev,
+              attachments: prev.attachments.filter(
+                (a) => a.id !== deletingAttachment.id,
+              ),
+            }
+          : prev,
+      );
+      setDeletingAttachment(null);
+    } catch (e) {
+      setUploadError(e instanceof Error ? e.message : 'Delete failed');
+    } finally {
+      setDeleteAttachmentBusy(false);
+    }
   }
 
   useEffect(() => {
@@ -222,7 +273,16 @@ export default function CourseDetailPage() {
           onCreate={() => setExamCreateOpen(true)}
         />
       )}
-      {tab === 'attachments' && <AttachmentsList items={course.attachments} />}
+      {tab === 'attachments' && (
+        <AttachmentsSection
+          items={course.attachments}
+          canManage={!!canEditClass && !course.isClosed}
+          uploading={uploadBusy}
+          error={uploadError}
+          onUpload={(file) => void uploadAttachment(file)}
+          onDelete={(a) => setDeletingAttachment({ id: a.id, fileName: a.fileName })}
+        />
+      )}
 
       <EditClassDialog
         klass={editingClass}
@@ -256,6 +316,34 @@ export default function CourseDetailPage() {
           router.push(`/courses/${course.id}/exams/${exam.id}`);
         }}
       />
+
+      <Dialog
+        open={!!deletingAttachment}
+        onClose={() => !deleteAttachmentBusy && setDeletingAttachment(null)}
+        title="Delete attachment?"
+        description={
+          deletingAttachment
+            ? `This permanently removes "${deletingAttachment.fileName}" from the server.`
+            : ''
+        }
+      >
+        <div className="flex justify-end gap-2">
+          <Button
+            variant="outline"
+            onClick={() => setDeletingAttachment(null)}
+            disabled={deleteAttachmentBusy}
+          >
+            Cancel
+          </Button>
+          <Button
+            variant="destructive"
+            onClick={() => void confirmDeleteAttachment()}
+            disabled={deleteAttachmentBusy}
+          >
+            {deleteAttachmentBusy ? 'Deleting…' : 'Delete'}
+          </Button>
+        </div>
+      </Dialog>
 
       <Dialog
         open={confirmDelete}
@@ -515,37 +603,105 @@ function ExamsSection({
   );
 }
 
-function AttachmentsList({ items }: { items: CourseDetail['attachments'] }) {
-  if (items.length === 0)
-    return <p className="text-sm text-muted-foreground">No attachments uploaded.</p>;
+function AttachmentsSection({
+  items,
+  canManage,
+  uploading,
+  error,
+  onUpload,
+  onDelete,
+}: {
+  items: CourseDetail['attachments'];
+  canManage: boolean;
+  uploading: boolean;
+  error: string | null;
+  onUpload: (file: File) => void;
+  onDelete: (a: CourseAttachment) => void;
+}) {
   return (
-    <Card className="overflow-hidden">
-      <ul className="divide-y">
-        {items.map((a) => {
-          const url = uploadUrl(a.filePath);
-          return (
-            <li key={a.id} className="flex items-center justify-between p-3 text-sm">
-              <div>
-                <p className="font-medium">{a.fileName}</p>
-                <p className="text-xs text-muted-foreground">
-                  Uploaded {fmtDate(a.uploadedAt)}
-                </p>
-              </div>
-              {url && (
-                <a
-                  href={url}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="text-primary underline"
-                >
-                  Download
-                </a>
-              )}
-            </li>
-          );
-        })}
-      </ul>
-    </Card>
+    <div className="space-y-3">
+      {canManage && (
+        <Card className="border-dashed">
+          <CardContent className="flex flex-col gap-2 pt-6 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <p className="text-sm font-medium">Upload course material</p>
+              <p className="text-xs text-muted-foreground">
+                Any file type · max 25 MB · students will see them on the course page.
+              </p>
+            </div>
+            <label className="inline-flex">
+              <input
+                type="file"
+                className="hidden"
+                disabled={uploading}
+                onChange={(e) => {
+                  const f = e.target.files?.[0];
+                  if (f) onUpload(f);
+                  e.target.value = '';
+                }}
+              />
+              <span
+                className={
+                  'inline-flex h-9 cursor-pointer items-center justify-center rounded-md bg-primary px-3 text-sm font-medium text-primary-foreground hover:bg-primary/90 ' +
+                  (uploading ? 'pointer-events-none opacity-50' : '')
+                }
+              >
+                {uploading ? 'Uploading…' : '+ Choose file'}
+              </span>
+            </label>
+          </CardContent>
+        </Card>
+      )}
+
+      {error && (
+        <p className="rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive">
+          {error}
+        </p>
+      )}
+
+      {items.length === 0 ? (
+        <p className="text-sm text-muted-foreground">No attachments uploaded.</p>
+      ) : (
+        <Card className="overflow-hidden">
+          <ul className="divide-y">
+            {items.map((a) => {
+              const url = uploadUrl(a.filePath);
+              return (
+                <li key={a.id} className="flex items-center justify-between p-3 text-sm">
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate font-medium">{a.fileName}</p>
+                    <p className="text-xs text-muted-foreground">
+                      Uploaded {fmtDate(a.uploadedAt)}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    {url && (
+                      <a
+                        href={url}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="text-primary underline"
+                      >
+                        Download
+                      </a>
+                    )}
+                    {canManage && (
+                      <Button
+                        size="sm"
+                        variant="destructive"
+                        onClick={() => onDelete(a)}
+                      >
+                        Delete
+                      </Button>
+                    )}
+                  </div>
+                </li>
+              );
+            })}
+          </ul>
+        </Card>
+      )}
+    </div>
   );
 }
 
