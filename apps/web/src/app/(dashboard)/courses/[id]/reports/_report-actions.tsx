@@ -51,7 +51,7 @@ export function ReportActions({ excelPath, excelFileName, onPrint }: Props) {
           onClick={() => void downloadExcel()}
           disabled={busy}
         >
-          <Download className="mr-2 h-4 w-4" />
+          <Download className="me-2 h-4 w-4" />
           {busy ? 'Downloading…' : 'Excel'}
         </Button>
       )}
@@ -63,7 +63,7 @@ export function ReportActions({ excelPath, excelFileName, onPrint }: Props) {
           else window.print();
         }}
       >
-        <Printer className="mr-2 h-4 w-4" />
+        <Printer className="me-2 h-4 w-4" />
         PDF / Print
       </Button>
     </div>

@@ -2,11 +2,13 @@
 
 import { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { useT } from '@/i18n/provider';
 import { api } from '@/lib/api';
 
 type Stats = Record<string, number | string>;
 
 export default function DashboardPage() {
+  const t = useT();
   const [stats, setStats] = useState<Stats | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -17,15 +19,15 @@ export default function DashboardPage() {
   }, []);
 
   if (error) return <p className="text-destructive">{error}</p>;
-  if (!stats) return <p className="text-muted-foreground">Loading…</p>;
+  if (!stats) return <p className="text-muted-foreground">{t('common.loading')}</p>;
 
   const entries = Object.entries(stats).filter(([k]) => k !== 'role');
 
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold">Dashboard</h1>
-        <p className="text-sm text-muted-foreground">Role: {String(stats.role)}</p>
+        <h1 className="text-2xl font-bold">{t('dashboard.title')}</h1>
+        <p className="text-sm text-muted-foreground">{t('dashboard.role')}: {String(stats.role)}</p>
       </div>
       <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
         {entries.map(([key, value]) => (

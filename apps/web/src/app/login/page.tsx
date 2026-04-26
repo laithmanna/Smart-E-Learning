@@ -1,15 +1,18 @@
 'use client';
 
 import { useState, type FormEvent } from 'react';
+import { LangToggle } from '@/components/app/lang-toggle';
 import { ThemeToggle } from '@/components/app/theme-toggle';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useAuth } from '@/hooks/use-auth';
+import { useT } from '@/i18n/provider';
 
 export default function LoginPage() {
   const { login } = useAuth();
+  const t = useT();
   const [email, setEmail] = useState('laethmanna4@gmail.com');
   const [password, setPassword] = useState('Admin@123');
   const [error, setError] = useState<string | null>(null);
@@ -30,18 +33,23 @@ export default function LoginPage() {
 
   return (
     <div className="relative flex min-h-screen items-center justify-center bg-muted/30 p-4">
-      <div className="absolute right-4 top-4 w-32">
-        <ThemeToggle />
+      <div className="absolute end-4 top-4 flex gap-2">
+        <div className="w-32">
+          <LangToggle />
+        </div>
+        <div className="w-32">
+          <ThemeToggle />
+        </div>
       </div>
       <Card className="w-full max-w-md">
         <CardHeader>
-          <CardTitle>Smart E-Learning</CardTitle>
-          <p className="text-sm text-muted-foreground">Sign in to your account</p>
+          <CardTitle>{t('app.name')}</CardTitle>
+          <p className="text-sm text-muted-foreground">{t('auth.signInDescription')}</p>
         </CardHeader>
         <CardContent>
           <form onSubmit={onSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="email">{t('auth.email')}</Label>
               <Input
                 id="email"
                 type="email"
@@ -52,7 +60,7 @@ export default function LoginPage() {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
+              <Label htmlFor="password">{t('auth.password')}</Label>
               <Input
                 id="password"
                 type="password"
@@ -68,7 +76,7 @@ export default function LoginPage() {
               </p>
             )}
             <Button type="submit" className="w-full" disabled={submitting}>
-              {submitting ? 'Signing in…' : 'Sign in'}
+              {submitting ? t('auth.signingIn') : t('auth.signIn')}
             </Button>
           </form>
         </CardContent>

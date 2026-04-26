@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAuth } from '@/hooks/use-auth';
+import { useT } from '@/i18n/provider';
 import { api } from '@/lib/api';
 import type { Course, Role } from '@/lib/types';
 import { CreateCourseDialog } from './_create-course-dialog';
@@ -13,6 +14,7 @@ const CAN_CREATE: Role[] = ['SUPER_ADMIN', 'ADMIN', 'COORDINATOR'];
 
 export default function CoursesPage() {
   const { user } = useAuth();
+  const t = useT();
   const [courses, setCourses] = useState<Course[] | null>(null);
   const [showClosed, setShowClosed] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -31,9 +33,9 @@ export default function CoursesPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold">Courses</h1>
+          <h1 className="text-2xl font-bold">{t('courses.title')}</h1>
           <p className="text-sm text-muted-foreground">
-            {showClosed ? 'Closed (history)' : 'Active courses'}
+            {showClosed ? t('courses.closedDescription') : t('courses.activeDescription')}
           </p>
         </div>
         <div className="flex gap-2">
@@ -42,27 +44,27 @@ export default function CoursesPage() {
             size="sm"
             onClick={() => setShowClosed(false)}
           >
-            Active
+            {t('courses.active')}
           </Button>
           <Button
             variant={showClosed ? 'default' : 'outline'}
             size="sm"
             onClick={() => setShowClosed(true)}
           >
-            History
+            {t('courses.history')}
           </Button>
           {canCreate && (
             <Button size="sm" onClick={() => setCreateOpen(true)}>
-              + New course
+              {t('courses.newCourse')}
             </Button>
           )}
         </div>
       </div>
 
       {error && <p className="text-destructive">{error}</p>}
-      {!courses && !error && <p className="text-muted-foreground">Loading…</p>}
+      {!courses && !error && <p className="text-muted-foreground">{t('common.loading')}</p>}
       {courses && courses.length === 0 && (
-        <p className="text-muted-foreground">No courses to show.</p>
+        <p className="text-muted-foreground">{t('courses.noCourses')}</p>
       )}
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
@@ -81,23 +83,25 @@ export default function CoursesPage() {
               </CardHeader>
               <CardContent className="space-y-2 text-sm">
                 <p>
-                  <span className="text-muted-foreground">Dates:</span>{' '}
+                  <span className="text-muted-foreground">{t('common.date')}:</span>{' '}
                   {fmt(c.startDate)} → {fmt(c.endDate)}
                 </p>
                 {c.trainer && (
                   <p>
-                    <span className="text-muted-foreground">Trainer:</span> {c.trainer.name}
+                    <span className="text-muted-foreground">{t('courses.trainer')}:</span>{' '}
+                    {c.trainer.name}
                   </p>
                 )}
                 {c.client && (
                   <p>
-                    <span className="text-muted-foreground">Client:</span> {c.client.name}
+                    <span className="text-muted-foreground">{t('courses.client')}:</span>{' '}
+                    {c.client.name}
                   </p>
                 )}
                 {c._count && (
                   <p className="text-xs text-muted-foreground">
-                    {c._count.classes} classes · {c._count.enrollments} enrolled ·{' '}
-                    {c._count.exams} exams
+                    {c._count.classes} {t('courses.classes')} · {c._count.enrollments}{' '}
+                    {t('courses.enrolled')} · {c._count.exams} {t('courses.exams')}
                   </p>
                 )}
               </CardContent>

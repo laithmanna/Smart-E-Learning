@@ -17,15 +17,18 @@ import {
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
+import { LangToggle } from '@/components/app/lang-toggle';
 import { ThemeToggle } from '@/components/app/theme-toggle';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/use-auth';
+import { useT, useLocale } from '@/i18n/provider';
+import type { Messages } from '@/i18n/messages/en';
 import { cn } from '@/lib/utils';
 import type { Role } from '@/lib/types';
 
 interface NavItem {
   href: string;
-  label: string;
+  labelKey: keyof Messages['nav'];
   icon: LucideIcon;
   roles: Role[];
 }
@@ -33,49 +36,49 @@ interface NavItem {
 const NAV: NavItem[] = [
   {
     href: '/dashboard',
-    label: 'Dashboard',
+    labelKey: 'dashboard',
     icon: LayoutDashboard,
     roles: ['SUPER_ADMIN', 'ADMIN', 'COORDINATOR', 'TRAINER', 'STUDENT', 'CLIENT'],
   },
   {
     href: '/courses',
-    label: 'Courses',
+    labelKey: 'courses',
     icon: GraduationCap,
     roles: ['SUPER_ADMIN', 'ADMIN', 'COORDINATOR', 'TRAINER', 'STUDENT', 'CLIENT'],
   },
   {
     href: '/students',
-    label: 'Students',
+    labelKey: 'students',
     icon: Users,
     roles: ['SUPER_ADMIN', 'ADMIN', 'COORDINATOR', 'CLIENT'],
   },
   {
     href: '/trainers',
-    label: 'Trainers',
+    labelKey: 'trainers',
     icon: UserCog,
     roles: ['SUPER_ADMIN', 'ADMIN'],
   },
   {
     href: '/coordinators',
-    label: 'Coordinators',
+    labelKey: 'coordinators',
     icon: ClipboardList,
     roles: ['SUPER_ADMIN', 'ADMIN'],
   },
   {
     href: '/clients',
-    label: 'Clients',
+    labelKey: 'clients',
     icon: Building2,
     roles: ['SUPER_ADMIN', 'ADMIN'],
   },
   {
     href: '/admins',
-    label: 'Admins',
+    labelKey: 'admins',
     icon: Shield,
     roles: ['SUPER_ADMIN'],
   },
   {
     href: '/templates',
-    label: 'Templates',
+    labelKey: 'templates',
     icon: FileText,
     roles: ['SUPER_ADMIN', 'ADMIN', 'COORDINATOR'],
   },
@@ -86,6 +89,8 @@ const STORAGE_KEY = 'sel_sidebar_collapsed';
 export function Sidebar() {
   const pathname = usePathname();
   const { user, logout } = useAuth();
+  const { dir } = useLocale();
+  const t = useT();
   const [collapsed, setCollapsed] = useState(false);
   const [hydrated, setHydrated] = useState(false);
 
@@ -104,35 +109,46 @@ export function Sidebar() {
   if (!user) return null;
   const items = NAV.filter((n) => n.roles.includes(user.role));
 
+  // Toggle sits at the OUTSIDE edge — opposite the wall.
+  // LTR: wall on left → toggle on right edge (-end-3 = -right-3)
+  // RTL: wall on right → toggle on left edge (-end-3 = -left-3)
+  // Use logical class so it flips automatically.
+  const isRtl = dir === 'rtl';
+
+  // Pick chevron icon based on direction + collapsed state
+  // When expanded: arrow points "toward wall" (collapse direction)
+  // LTR: collapse → arrow points left;   RTL: collapse → arrow points right
+  // When collapsed: arrow points "away from wall" (expand direction)
+  const collapseIcon = isRtl ? <ChevronRight className="h-3.5 w-3.5" /> : <ChevronLeft className="h-3.5 w-3.5" />;
+  const expandIcon = isRtl ? <ChevronLeft className="h-3.5 w-3.5" /> : <ChevronRight className="h-3.5 w-3.5" />;
+
   return (
     <aside
       className={cn(
-        'relative flex h-screen shrink-0 flex-col border-r bg-card transition-[width] duration-200 ease-out',
+        'relative flex h-screen shrink-0 flex-col bg-card transition-[width] duration-200 ease-out',
+        // Border on the inner edge (toward main content)
+        isRtl ? 'border-l' : 'border-r',
         collapsed ? 'w-16 px-2 py-4' : 'w-60 p-4',
       )}
     >
-      {/* Toggle button (top-right of sidebar, slightly overhanging) */}
       <button
         onClick={() => setCollapsed((v) => !v)}
         aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
         title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
         className={cn(
-          'absolute -right-3 top-6 z-10 flex h-6 w-6 items-center justify-center',
+          'absolute top-6 z-10 flex h-6 w-6 items-center justify-center',
           'rounded-full border bg-card shadow-sm hover:bg-accent',
           'transition-colors',
+          isRtl ? '-left-3' : '-right-3',
         )}
       >
-        {collapsed ? (
-          <ChevronRight className="h-3.5 w-3.5" />
-        ) : (
-          <ChevronLeft className="h-3.5 w-3.5" />
-        )}
+        {collapsed ? expandIcon : collapseIcon}
       </button>
 
       {/* Brand / user */}
       {!collapsed ? (
         <div className="mb-6">
-          <p className="font-semibold">Smart E-Learning</p>
+          <p className="font-semibold">{t('app.name')}</p>
           <p className="truncate text-xs text-muted-foreground">{user.email}</p>
           <p className="mt-1 inline-block rounded-full bg-secondary px-2 py-0.5 text-xs">
             {user.role}
@@ -147,16 +163,16 @@ export function Sidebar() {
         </div>
       )}
 
-      {/* Nav */}
       <nav className="flex-1 space-y-1">
         {items.map((item) => {
           const active = pathname === item.href || pathname.startsWith(item.href + '/');
           const Icon = item.icon;
+          const label = t(`nav.${item.labelKey}`);
           return (
             <Link
               key={item.href}
               href={item.href}
-              title={collapsed ? item.label : undefined}
+              title={collapsed ? label : undefined}
               className={cn(
                 'flex items-center gap-3 rounded-md text-sm transition-colors',
                 collapsed ? 'h-10 w-full justify-center' : 'px-3 py-2',
@@ -166,22 +182,22 @@ export function Sidebar() {
               )}
             >
               <Icon className="h-4 w-4 shrink-0" />
-              {!collapsed && <span className="truncate">{item.label}</span>}
+              {!collapsed && <span className="truncate">{label}</span>}
             </Link>
           );
         })}
       </nav>
 
-      {/* Footer: theme + sign out */}
       <div className={cn('space-y-2', collapsed && 'flex flex-col items-center')}>
+        <LangToggle compact={collapsed} />
         <ThemeToggle compact={collapsed} />
         {collapsed ? (
           <Button
             variant="outline"
             size="sm"
             onClick={() => void logout()}
-            aria-label="Sign out"
-            title="Sign out"
+            aria-label={t('auth.signOut')}
+            title={t('auth.signOut')}
             className="w-9 px-0"
           >
             <LogOut className="h-4 w-4" />
@@ -193,7 +209,7 @@ export function Sidebar() {
             onClick={() => void logout()}
             className="w-full"
           >
-            Sign out
+            {t('auth.signOut')}
           </Button>
         )}
       </div>
