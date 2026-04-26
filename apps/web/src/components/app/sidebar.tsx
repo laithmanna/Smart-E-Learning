@@ -47,7 +47,7 @@ const NAV: NavItem[] = [
     href: '/students',
     label: 'Students',
     icon: Users,
-    roles: ['SUPER_ADMIN', 'ADMIN', 'COORDINATOR', 'TRAINER', 'CLIENT'],
+    roles: ['SUPER_ADMIN', 'ADMIN', 'COORDINATOR', 'CLIENT'],
   },
   {
     href: '/trainers',
@@ -77,7 +77,7 @@ const NAV: NavItem[] = [
     href: '/templates',
     label: 'Templates',
     icon: FileText,
-    roles: ['SUPER_ADMIN', 'ADMIN', 'COORDINATOR', 'TRAINER'],
+    roles: ['SUPER_ADMIN', 'ADMIN', 'COORDINATOR'],
   },
 ];
 
