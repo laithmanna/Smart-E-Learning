@@ -74,6 +74,15 @@ export class EvaluationsController {
   }
 
   @Roles(Role.STUDENT)
+  @Get('me/evaluation-responses')
+  myResponses(
+    @Query('evaluationId') evaluationId: string,
+    @CurrentUser() user: AuthenticatedUser,
+  ) {
+    return this.evaluations.myResponses(evaluationId, user);
+  }
+
+  @Roles(Role.STUDENT)
   @Post('evaluations/:id/responses')
   submit(
     @Param('id') id: string,

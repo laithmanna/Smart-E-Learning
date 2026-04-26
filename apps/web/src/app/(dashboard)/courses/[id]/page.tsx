@@ -290,6 +290,7 @@ export default function CourseDetailPage() {
           exams={exams}
           courseId={course.id}
           canCreate={!!canEditClass && !course.isClosed}
+          isStudent={user?.role === 'STUDENT'}
           onCreate={() => setExamCreateOpen(true)}
         />
       )}
@@ -298,6 +299,7 @@ export default function CourseDetailPage() {
           evaluations={evaluations}
           courseId={course.id}
           canCreate={!!canManage && !course.isClosed}
+          isStudent={user?.role === 'STUDENT'}
           onCreate={() => setEvalCreateOpen(true)}
         />
       )}
@@ -607,11 +609,13 @@ function ExamsSection({
   exams,
   courseId,
   canCreate,
+  isStudent,
   onCreate,
 }: {
   exams: Exam[] | null;
   courseId: string;
   canCreate: boolean;
+  isStudent: boolean;
   onCreate: () => void;
 }) {
   return (
@@ -625,7 +629,7 @@ function ExamsSection({
       )}
       {!exams && <p className="text-sm text-muted-foreground">Loading…</p>}
       {exams && exams.length === 0 && (
-        <p className="text-sm text-muted-foreground">No exams created yet.</p>
+        <p className="text-sm text-muted-foreground">No exams yet.</p>
       )}
       {exams && exams.length > 0 && (
         <Card className="overflow-hidden">
@@ -636,18 +640,20 @@ function ExamsSection({
                 <th className="p-3">Date</th>
                 <th className="p-3">Type</th>
                 <th className="p-3">Total marks</th>
-                <th className="p-3">Questions</th>
-                <th className="p-3">Submitted</th>
-                <th className="p-3"></th>
+                {!isStudent && <th className="p-3">Questions</th>}
+                {!isStudent && <th className="p-3">Submitted</th>}
+                <th className="p-3 text-right">{isStudent ? 'Action' : ''}</th>
               </tr>
             </thead>
             <tbody className="divide-y">
               {exams.map((e) => (
                 <tr
                   key={e.id}
-                  className="cursor-pointer transition hover:bg-accent"
+                  className={isStudent ? '' : 'cursor-pointer transition hover:bg-accent'}
                   onClick={() => {
-                    window.location.href = `/courses/${courseId}/exams/${e.id}`;
+                    if (!isStudent) {
+                      window.location.href = `/courses/${courseId}/exams/${e.id}`;
+                    }
                   }}
                 >
                   <td className="p-3 font-medium">{e.examName}</td>
@@ -658,9 +664,17 @@ function ExamsSection({
                     </span>
                   </td>
                   <td className="p-3">{e.totalMarks}</td>
-                  <td className="p-3">{e._count?.questions ?? 0}</td>
-                  <td className="p-3">{e._count?.results ?? 0}</td>
-                  <td className="p-3 text-right text-xs text-muted-foreground">→</td>
+                  {!isStudent && <td className="p-3">{e._count?.questions ?? 0}</td>}
+                  {!isStudent && <td className="p-3">{e._count?.results ?? 0}</td>}
+                  <td className="p-3 text-right">
+                    {isStudent ? (
+                      <Link href={`/courses/${courseId}/exams/${e.id}/take`}>
+                        <Button size="sm">Start exam</Button>
+                      </Link>
+                    ) : (
+                      <span className="text-xs text-muted-foreground">→</span>
+                    )}
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -675,11 +689,13 @@ function EvaluationsSection({
   evaluations,
   courseId,
   canCreate,
+  isStudent,
   onCreate,
 }: {
   evaluations: Evaluation[] | null;
   courseId: string;
   canCreate: boolean;
+  isStudent: boolean;
   onCreate: () => void;
 }) {
   return (
@@ -693,7 +709,9 @@ function EvaluationsSection({
       )}
       {!evaluations && <p className="text-sm text-muted-foreground">Loading…</p>}
       {evaluations && evaluations.length === 0 && (
-        <p className="text-sm text-muted-foreground">No evaluations created yet.</p>
+        <p className="text-sm text-muted-foreground">
+          {isStudent ? 'No evaluations available yet.' : 'No evaluations created yet.'}
+        </p>
       )}
       {evaluations && evaluations.length > 0 && (
         <Card className="overflow-hidden">
@@ -701,36 +719,48 @@ function EvaluationsSection({
             <thead className="bg-muted/50 text-left text-xs uppercase text-muted-foreground">
               <tr>
                 <th className="p-3">Name</th>
-                <th className="p-3">Status</th>
+                {!isStudent && <th className="p-3">Status</th>}
                 <th className="p-3">Questions</th>
                 <th className="p-3">Created</th>
-                <th className="p-3"></th>
+                <th className="p-3 text-right">{isStudent ? 'Action' : ''}</th>
               </tr>
             </thead>
             <tbody className="divide-y">
               {evaluations.map((e) => (
                 <tr
                   key={e.id}
-                  className="cursor-pointer transition hover:bg-accent"
+                  className={isStudent ? '' : 'cursor-pointer transition hover:bg-accent'}
                   onClick={() => {
-                    window.location.href = `/courses/${courseId}/evaluations/${e.id}`;
+                    if (!isStudent) {
+                      window.location.href = `/courses/${courseId}/evaluations/${e.id}`;
+                    }
                   }}
                 >
                   <td className="p-3 font-medium">{e.name}</td>
-                  <td className="p-3">
-                    {e.isPublished ? (
-                      <span className="rounded-full bg-green-100 px-2 py-0.5 text-xs text-green-800 dark:bg-green-900/30 dark:text-green-300">
-                        Published
-                      </span>
-                    ) : (
-                      <span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs text-amber-800 dark:bg-amber-900/30 dark:text-amber-300">
-                        Draft
-                      </span>
-                    )}
-                  </td>
+                  {!isStudent && (
+                    <td className="p-3">
+                      {e.isPublished ? (
+                        <span className="rounded-full bg-green-100 px-2 py-0.5 text-xs text-green-800 dark:bg-green-900/30 dark:text-green-300">
+                          Published
+                        </span>
+                      ) : (
+                        <span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs text-amber-800 dark:bg-amber-900/30 dark:text-amber-300">
+                          Draft
+                        </span>
+                      )}
+                    </td>
+                  )}
                   <td className="p-3">{e._count?.questions ?? 0}</td>
                   <td className="p-3 text-muted-foreground">{fmtDate(e.createdAt)}</td>
-                  <td className="p-3 text-right text-xs text-muted-foreground">→</td>
+                  <td className="p-3 text-right">
+                    {isStudent ? (
+                      <Link href={`/courses/${courseId}/evaluations/${e.id}/fill`}>
+                        <Button size="sm">Fill evaluation</Button>
+                      </Link>
+                    ) : (
+                      <span className="text-xs text-muted-foreground">→</span>
+                    )}
+                  </td>
                 </tr>
               ))}
             </tbody>

@@ -98,6 +98,17 @@ export class EvaluationsService {
     return { id };
   }
 
+  async myResponses(evaluationId: string, user: AuthenticatedUser) {
+    if (user.role !== Role.STUDENT) {
+      throw new ForbiddenException('Only students have evaluation responses');
+    }
+    const student = await this.prisma.student.findUnique({ where: { userId: user.sub } });
+    if (!student) throw new ForbiddenException('No student profile');
+    return this.prisma.evaluationResponse.findMany({
+      where: { studentId: student.id, question: { evaluationId } },
+    });
+  }
+
   async submit(
     evaluationId: string,
     user: AuthenticatedUser,
