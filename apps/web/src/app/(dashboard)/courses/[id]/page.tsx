@@ -40,6 +40,9 @@ export default function CourseDetailPage() {
   const [students, setStudents] = useState<EnrollmentRow[] | null>(null);
   const [exams, setExams] = useState<Exam[] | null>(null);
   const [evaluations, setEvaluations] = useState<Evaluation[] | null>(null);
+  const [myResults, setMyResults] = useState<
+    { examId: string; marksObtained: number; totalMarks: number }[]
+  >([]);
   const [error, setError] = useState<string | null>(null);
   const [tab, setTab] = useState<Tab>('classes');
 
@@ -128,6 +131,25 @@ export default function CourseDetailPage() {
       .then(setEvaluations)
       .catch(() => {});
   }, [id]);
+
+  // Student-only: fetch own exam results so we can show "Submitted X/Y" inline
+  useEffect(() => {
+    if (!user || user.role !== 'STUDENT') return;
+    api<Array<{
+      exam: { id: string; totalMarks: number };
+      marksObtained: number;
+    }>>('/me/exam-results')
+      .then((rows) =>
+        setMyResults(
+          rows.map((r) => ({
+            examId: r.exam.id,
+            marksObtained: r.marksObtained,
+            totalMarks: r.exam.totalMarks,
+          })),
+        ),
+      )
+      .catch(() => {});
+  }, [user]);
 
   async function toggleClosed() {
     if (!course) return;
@@ -291,6 +313,7 @@ export default function CourseDetailPage() {
           courseId={course.id}
           canCreate={!!canEditClass && !course.isClosed}
           isStudent={user?.role === 'STUDENT'}
+          myResults={myResults}
           onCreate={() => setExamCreateOpen(true)}
         />
       )}
@@ -610,12 +633,14 @@ function ExamsSection({
   courseId,
   canCreate,
   isStudent,
+  myResults,
   onCreate,
 }: {
   exams: Exam[] | null;
   courseId: string;
   canCreate: boolean;
   isStudent: boolean;
+  myResults: { examId: string; marksObtained: number; totalMarks: number }[];
   onCreate: () => void;
 }) {
   return (
@@ -646,37 +671,48 @@ function ExamsSection({
               </tr>
             </thead>
             <tbody className="divide-y">
-              {exams.map((e) => (
-                <tr
-                  key={e.id}
-                  className={isStudent ? '' : 'cursor-pointer transition hover:bg-accent'}
-                  onClick={() => {
-                    if (!isStudent) {
-                      window.location.href = `/courses/${courseId}/exams/${e.id}`;
-                    }
-                  }}
-                >
-                  <td className="p-3 font-medium">{e.examName}</td>
-                  <td className="p-3">{fmtDate(e.examDate)}</td>
-                  <td className="p-3">
-                    <span className="rounded-full bg-secondary px-2 py-0.5 text-xs">
-                      {e.examType === 'MULTIPLE_CHOICE' ? 'MCQ' : 'Free text'}
-                    </span>
-                  </td>
-                  <td className="p-3">{e.totalMarks}</td>
-                  {!isStudent && <td className="p-3">{e._count?.questions ?? 0}</td>}
-                  {!isStudent && <td className="p-3">{e._count?.results ?? 0}</td>}
-                  <td className="p-3 text-right">
-                    {isStudent ? (
-                      <Link href={`/courses/${courseId}/exams/${e.id}/take`}>
-                        <Button size="sm">Start exam</Button>
-                      </Link>
-                    ) : (
-                      <span className="text-xs text-muted-foreground">→</span>
-                    )}
-                  </td>
-                </tr>
-              ))}
+              {exams.map((e) => {
+                const myResult = myResults.find((r) => r.examId === e.id);
+                return (
+                  <tr
+                    key={e.id}
+                    className={isStudent ? '' : 'cursor-pointer transition hover:bg-accent'}
+                    onClick={() => {
+                      if (!isStudent) {
+                        window.location.href = `/courses/${courseId}/exams/${e.id}`;
+                      }
+                    }}
+                  >
+                    <td className="p-3 font-medium">{e.examName}</td>
+                    <td className="p-3">{fmtDate(e.examDate)}</td>
+                    <td className="p-3">
+                      <span className="rounded-full bg-secondary px-2 py-0.5 text-xs">
+                        {e.examType === 'MULTIPLE_CHOICE' ? 'MCQ' : 'Free text'}
+                      </span>
+                    </td>
+                    <td className="p-3">{e.totalMarks}</td>
+                    {!isStudent && <td className="p-3">{e._count?.questions ?? 0}</td>}
+                    {!isStudent && <td className="p-3">{e._count?.results ?? 0}</td>}
+                    <td className="p-3 text-right">
+                      {isStudent ? (
+                        myResult ? (
+                          <Link href={`/courses/${courseId}/exams/${e.id}/take`}>
+                            <span className="rounded-full bg-green-100 px-3 py-1 text-xs font-medium text-green-800 hover:bg-green-200 dark:bg-green-900/30 dark:text-green-300">
+                              Submitted · {myResult.marksObtained}/{myResult.totalMarks}
+                            </span>
+                          </Link>
+                        ) : (
+                          <Link href={`/courses/${courseId}/exams/${e.id}/take`}>
+                            <Button size="sm">Start exam</Button>
+                          </Link>
+                        )
+                      ) : (
+                        <span className="text-xs text-muted-foreground">→</span>
+                      )}
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </Card>

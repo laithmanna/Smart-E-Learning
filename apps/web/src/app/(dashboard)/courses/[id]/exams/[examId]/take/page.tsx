@@ -25,6 +25,11 @@ interface TakeExam {
     option3: string | null;
     option4: string | null;
   }[];
+  mySubmission: {
+    submittedAt: string;
+    hasAnswers: boolean;
+    result: { marksObtained: number } | null;
+  } | null;
 }
 
 interface SubmitResult {
@@ -107,6 +112,56 @@ export default function TakeExamPage() {
             Open admin view →
           </Link>
         </p>
+      </div>
+    );
+  }
+
+  // ----- Already taken (loaded from mySubmission) -----
+  if (exam.mySubmission && !submitResult) {
+    const sub = exam.mySubmission;
+    const submittedDate = new Date(sub.submittedAt).toISOString().slice(0, 10);
+    return (
+      <div className="space-y-6">
+        <div>
+          <Link
+            href={`/courses/${courseId}`}
+            className="text-sm text-muted-foreground hover:underline"
+          >
+            ← Back to course
+          </Link>
+        </div>
+        <div className="space-y-1">
+          <h1 className="text-2xl font-bold">{exam.examName}</h1>
+          <p className="text-sm text-muted-foreground">
+            Submitted on {submittedDate}
+          </p>
+        </div>
+        <Card>
+          <CardContent className="space-y-4 pt-6 text-center">
+            <p className="rounded-md bg-muted px-3 py-2 text-sm">
+              You&apos;ve already taken this exam — submissions are final.
+            </p>
+            {sub.result ? (
+              <>
+                <p className="text-sm uppercase text-muted-foreground">Your score</p>
+                <p className="text-5xl font-bold">
+                  {sub.result.marksObtained}
+                  <span className="text-2xl text-muted-foreground"> / {exam.totalMarks}</span>
+                </p>
+                <p className="text-2xl">
+                  {Math.round((sub.result.marksObtained / exam.totalMarks) * 100)}%
+                </p>
+              </>
+            ) : (
+              <p className="text-sm text-muted-foreground">
+                Awaiting trainer grading. Your score will appear here once graded.
+              </p>
+            )}
+            <Link href={`/courses/${courseId}`}>
+              <Button>Back to course</Button>
+            </Link>
+          </CardContent>
+        </Card>
       </div>
     );
   }

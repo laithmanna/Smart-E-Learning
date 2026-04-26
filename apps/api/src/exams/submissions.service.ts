@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  ConflictException,
   ForbiddenException,
   Injectable,
   NotFoundException,
@@ -33,9 +34,35 @@ export class SubmissionsService {
     });
     if (!exam) throw new NotFoundException('Exam not found');
 
+    let mySubmission: {
+      submittedAt: Date;
+      hasAnswers: boolean;
+      result: { marksObtained: number } | null;
+    } | null = null;
+
     if (user.role === Role.STUDENT) {
       const student = await this.requireStudent(user.sub);
       await this.requireEnrolled(student.id, exam.courseId);
+
+      const [firstAnswer, result] = await Promise.all([
+        this.prisma.studentAnswer.findFirst({
+          where: { studentId: student.id, question: { examId } },
+          orderBy: { createdAt: 'asc' },
+          select: { createdAt: true },
+        }),
+        this.prisma.examResult.findUnique({
+          where: { examId_studentId: { examId, studentId: student.id } },
+          select: { marksObtained: true },
+        }),
+      ]);
+
+      if (firstAnswer) {
+        mySubmission = {
+          submittedAt: firstAnswer.createdAt,
+          hasAnswers: true,
+          result,
+        };
+      }
     }
 
     return {
@@ -45,6 +72,7 @@ export class SubmissionsService {
       totalMarks: exam.totalMarks,
       examType: exam.examType,
       questions: exam.questions,
+      mySubmission,
     };
   }
 
@@ -71,13 +99,19 @@ export class SubmissionsService {
       }
     }
 
-    // Upsert answers
+    // Block re-submission — students can only take an exam once
+    const alreadySubmitted = await this.prisma.studentAnswer.count({
+      where: { studentId, question: { examId } },
+    });
+    if (alreadySubmitted > 0) {
+      throw new ConflictException('You have already submitted this exam');
+    }
+
+    // Create answers (one-shot)
     await this.prisma.$transaction(
       answers.map((a) =>
-        this.prisma.studentAnswer.upsert({
-          where: { questionId_studentId: { questionId: a.questionId, studentId } },
-          update: { selectedOption: a.selectedOption, textAnswer: a.textAnswer },
-          create: {
+        this.prisma.studentAnswer.create({
+          data: {
             questionId: a.questionId,
             studentId,
             selectedOption: a.selectedOption,
