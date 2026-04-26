@@ -14,9 +14,11 @@ import type {
   CourseClass,
   CourseDetail,
   EnrollmentRow,
+  Evaluation,
   Exam,
   Role,
 } from '@/lib/types';
+import { CreateEvaluationDialog } from './_create-evaluation-dialog';
 import { CreateExamDialog } from './_create-exam-dialog';
 import { EditClassDialog } from './_edit-class-dialog';
 import { EditCourseDialog } from './_edit-course-dialog';
@@ -26,7 +28,7 @@ import { TakeAttendanceDialog } from './_take-attendance-dialog';
 const CAN_MANAGE: Role[] = ['SUPER_ADMIN', 'ADMIN', 'COORDINATOR'];
 const CAN_EDIT_CLASS: Role[] = ['SUPER_ADMIN', 'ADMIN', 'COORDINATOR', 'TRAINER'];
 
-type Tab = 'classes' | 'students' | 'exams' | 'attachments';
+type Tab = 'classes' | 'students' | 'exams' | 'evaluations' | 'attachments';
 
 export default function CourseDetailPage() {
   const params = useParams<{ id: string }>();
@@ -37,6 +39,7 @@ export default function CourseDetailPage() {
   const [course, setCourse] = useState<CourseDetail | null>(null);
   const [students, setStudents] = useState<EnrollmentRow[] | null>(null);
   const [exams, setExams] = useState<Exam[] | null>(null);
+  const [evaluations, setEvaluations] = useState<Evaluation[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [tab, setTab] = useState<Tab>('classes');
 
@@ -47,6 +50,7 @@ export default function CourseDetailPage() {
   const [attendanceClass, setAttendanceClass] = useState<CourseClass | null>(null);
   const [enrollOpen, setEnrollOpen] = useState(false);
   const [examCreateOpen, setExamCreateOpen] = useState(false);
+  const [evalCreateOpen, setEvalCreateOpen] = useState(false);
   const [editCourseOpen, setEditCourseOpen] = useState(false);
   const [deletingAttachment, setDeletingAttachment] = useState<
     { id: string; fileName: string } | null
@@ -119,6 +123,9 @@ export default function CourseDetailPage() {
       .catch(() => {});
     api<Exam[]>(`/exams?courseId=${id}`)
       .then(setExams)
+      .catch(() => {});
+    api<Evaluation[]>(`/evaluations?courseId=${id}`)
+      .then(setEvaluations)
       .catch(() => {});
   }, [id]);
 
@@ -254,6 +261,9 @@ export default function CourseDetailPage() {
           <TabButton active={tab === 'exams'} onClick={() => setTab('exams')}>
             Exams ({exams?.length ?? '…'})
           </TabButton>
+          <TabButton active={tab === 'evaluations'} onClick={() => setTab('evaluations')}>
+            Evaluations ({evaluations?.length ?? '…'})
+          </TabButton>
           <TabButton active={tab === 'attachments'} onClick={() => setTab('attachments')}>
             Attachments ({course.attachments.length})
           </TabButton>
@@ -283,6 +293,15 @@ export default function CourseDetailPage() {
           onCreate={() => setExamCreateOpen(true)}
         />
       )}
+      {tab === 'evaluations' && (
+        <EvaluationsSection
+          evaluations={evaluations}
+          courseId={course.id}
+          canCreate={!!canManage && !course.isClosed}
+          onCreate={() => setEvalCreateOpen(true)}
+        />
+      )}
+
       {tab === 'attachments' && (
         <AttachmentsSection
           items={course.attachments}
@@ -340,6 +359,18 @@ export default function CourseDetailPage() {
         onCreated={(exam) => {
           setExams((prev) => (prev ? [...prev, { ...exam, _count: { questions: 0, results: 0 } }] : [exam]));
           router.push(`/courses/${course.id}/exams/${exam.id}`);
+        }}
+      />
+
+      <CreateEvaluationDialog
+        open={evalCreateOpen}
+        courseId={course.id}
+        onClose={() => setEvalCreateOpen(false)}
+        onCreated={(ev) => {
+          setEvaluations((prev) =>
+            prev ? [{ ...ev, _count: { questions: 0 } }, ...prev] : [ev],
+          );
+          router.push(`/courses/${course.id}/evaluations/${ev.id}`);
         }}
       />
 
@@ -629,6 +660,76 @@ function ExamsSection({
                   <td className="p-3">{e.totalMarks}</td>
                   <td className="p-3">{e._count?.questions ?? 0}</td>
                   <td className="p-3">{e._count?.results ?? 0}</td>
+                  <td className="p-3 text-right text-xs text-muted-foreground">→</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </Card>
+      )}
+    </div>
+  );
+}
+
+function EvaluationsSection({
+  evaluations,
+  courseId,
+  canCreate,
+  onCreate,
+}: {
+  evaluations: Evaluation[] | null;
+  courseId: string;
+  canCreate: boolean;
+  onCreate: () => void;
+}) {
+  return (
+    <div className="space-y-3">
+      {canCreate && (
+        <div className="flex justify-end">
+          <Button size="sm" onClick={onCreate}>
+            + New evaluation
+          </Button>
+        </div>
+      )}
+      {!evaluations && <p className="text-sm text-muted-foreground">Loading…</p>}
+      {evaluations && evaluations.length === 0 && (
+        <p className="text-sm text-muted-foreground">No evaluations created yet.</p>
+      )}
+      {evaluations && evaluations.length > 0 && (
+        <Card className="overflow-hidden">
+          <table className="w-full text-sm">
+            <thead className="bg-muted/50 text-left text-xs uppercase text-muted-foreground">
+              <tr>
+                <th className="p-3">Name</th>
+                <th className="p-3">Status</th>
+                <th className="p-3">Questions</th>
+                <th className="p-3">Created</th>
+                <th className="p-3"></th>
+              </tr>
+            </thead>
+            <tbody className="divide-y">
+              {evaluations.map((e) => (
+                <tr
+                  key={e.id}
+                  className="cursor-pointer transition hover:bg-accent"
+                  onClick={() => {
+                    window.location.href = `/courses/${courseId}/evaluations/${e.id}`;
+                  }}
+                >
+                  <td className="p-3 font-medium">{e.name}</td>
+                  <td className="p-3">
+                    {e.isPublished ? (
+                      <span className="rounded-full bg-green-100 px-2 py-0.5 text-xs text-green-800 dark:bg-green-900/30 dark:text-green-300">
+                        Published
+                      </span>
+                    ) : (
+                      <span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs text-amber-800 dark:bg-amber-900/30 dark:text-amber-300">
+                        Draft
+                      </span>
+                    )}
+                  </td>
+                  <td className="p-3">{e._count?.questions ?? 0}</td>
+                  <td className="p-3 text-muted-foreground">{fmtDate(e.createdAt)}</td>
                   <td className="p-3 text-right text-xs text-muted-foreground">→</td>
                 </tr>
               ))}

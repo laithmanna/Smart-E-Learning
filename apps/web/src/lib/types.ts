@@ -114,6 +114,41 @@ export interface ExamResultRow {
   };
 }
 
+export interface Evaluation {
+  id: string;
+  courseId: string;
+  name: string;
+  isPublished: boolean;
+  createdAt: string;
+  updatedAt: string;
+  _count?: { questions: number };
+}
+
+export interface EvaluationQuestion {
+  id: string;
+  evaluationId: string;
+  question: string;
+}
+
+export interface EvaluationDetail extends Evaluation {
+  questions: EvaluationQuestion[];
+}
+
+export interface EvaluationReport {
+  id: string;
+  name: string;
+  isPublished: boolean;
+  questions: {
+    id: string;
+    question: string;
+    responses: {
+      studentId: string;
+      studentName: string;
+      rating: string;
+    }[];
+  }[];
+}
+
 export interface Student {
   id: string;
   name: string;
