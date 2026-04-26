@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -66,36 +67,42 @@ export default function CoursesPage() {
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         {courses?.map((c) => (
-          <Card key={c.id}>
-            <CardHeader>
-              <CardTitle>{c.courseName}</CardTitle>
-              {c.projectName && (
-                <p className="text-sm text-muted-foreground">{c.projectName}</p>
-              )}
-            </CardHeader>
-            <CardContent className="space-y-2 text-sm">
-              <p>
-                <span className="text-muted-foreground">Dates:</span>{' '}
-                {fmt(c.startDate)} → {fmt(c.endDate)}
-              </p>
-              {c.trainer && (
+          <Link
+            key={c.id}
+            href={`/courses/${c.id}`}
+            className="block rounded-xl outline-none transition focus-visible:ring-2 focus-visible:ring-ring"
+          >
+            <Card className="h-full cursor-pointer transition hover:border-primary hover:shadow-md">
+              <CardHeader>
+                <CardTitle>{c.courseName}</CardTitle>
+                {c.projectName && (
+                  <p className="text-sm text-muted-foreground">{c.projectName}</p>
+                )}
+              </CardHeader>
+              <CardContent className="space-y-2 text-sm">
                 <p>
-                  <span className="text-muted-foreground">Trainer:</span> {c.trainer.name}
+                  <span className="text-muted-foreground">Dates:</span>{' '}
+                  {fmt(c.startDate)} → {fmt(c.endDate)}
                 </p>
-              )}
-              {c.client && (
-                <p>
-                  <span className="text-muted-foreground">Client:</span> {c.client.name}
-                </p>
-              )}
-              {c._count && (
-                <p className="text-xs text-muted-foreground">
-                  {c._count.classes} classes · {c._count.enrollments} enrolled · {c._count.exams}{' '}
-                  exams
-                </p>
-              )}
-            </CardContent>
-          </Card>
+                {c.trainer && (
+                  <p>
+                    <span className="text-muted-foreground">Trainer:</span> {c.trainer.name}
+                  </p>
+                )}
+                {c.client && (
+                  <p>
+                    <span className="text-muted-foreground">Client:</span> {c.client.name}
+                  </p>
+                )}
+                {c._count && (
+                  <p className="text-xs text-muted-foreground">
+                    {c._count.classes} classes · {c._count.enrollments} enrolled ·{' '}
+                    {c._count.exams} exams
+                  </p>
+                )}
+              </CardContent>
+            </Card>
+          </Link>
         ))}
       </div>
 

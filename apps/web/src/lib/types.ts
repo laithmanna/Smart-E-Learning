@@ -39,6 +39,51 @@ export interface Course {
   _count?: { classes: number; enrollments: number; exams: number };
 }
 
+export interface CourseClass {
+  id: string;
+  courseId: string;
+  topic: string;
+  classDate: string;
+  startTime: string;
+  endTime: string;
+  location: string | null;
+  meetingLink: string | null;
+}
+
+export interface CourseAttachment {
+  id: string;
+  courseId: string;
+  fileName: string;
+  filePath: string;
+  uploadedAt: string;
+}
+
+export interface CourseDetail extends Course {
+  classes: CourseClass[];
+  attachments: CourseAttachment[];
+}
+
+export interface EnrollmentRow {
+  courseId: string;
+  studentId: string;
+  createdAt: string;
+  student: {
+    id: string;
+    name: string;
+    user: { id: string; email: string; isActive: boolean };
+  };
+}
+
+export interface Exam {
+  id: string;
+  courseId: string;
+  examName: string;
+  examDate: string;
+  totalMarks: number;
+  examType: 'MULTIPLE_CHOICE' | 'FREE_TEXT';
+  _count?: { questions: number; results: number };
+}
+
 export interface Student {
   id: string;
   name: string;
