@@ -21,6 +21,7 @@ import { CreateExamDialog } from './_create-exam-dialog';
 import { EditClassDialog } from './_edit-class-dialog';
 import { EditCourseDialog } from './_edit-course-dialog';
 import { EnrollStudentsDialog } from './_enroll-students-dialog';
+import { TakeAttendanceDialog } from './_take-attendance-dialog';
 
 const CAN_MANAGE: Role[] = ['SUPER_ADMIN', 'ADMIN', 'COORDINATOR'];
 const CAN_EDIT_CLASS: Role[] = ['SUPER_ADMIN', 'ADMIN', 'COORDINATOR', 'TRAINER'];
@@ -43,6 +44,7 @@ export default function CourseDetailPage() {
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [deleteBusy, setDeleteBusy] = useState(false);
   const [editingClass, setEditingClass] = useState<CourseClass | null>(null);
+  const [attendanceClass, setAttendanceClass] = useState<CourseClass | null>(null);
   const [enrollOpen, setEnrollOpen] = useState(false);
   const [examCreateOpen, setExamCreateOpen] = useState(false);
   const [editCourseOpen, setEditCourseOpen] = useState(false);
@@ -263,6 +265,7 @@ export default function CourseDetailPage() {
           classes={course.classes}
           canEdit={!!canEditClass}
           onEdit={(k) => setEditingClass(k)}
+          onTakeAttendance={(k) => setAttendanceClass(k)}
         />
       )}
       {tab === 'students' && (
@@ -310,6 +313,15 @@ export default function CourseDetailPage() {
                 }
               : prev,
           );
+        }}
+      />
+
+      <TakeAttendanceDialog
+        klass={attendanceClass}
+        enrollments={students}
+        onClose={() => setAttendanceClass(null)}
+        onSaved={() => {
+          /* nothing else to refresh on the page */
         }}
       />
 
@@ -425,10 +437,12 @@ function ClassesTable({
   classes,
   canEdit,
   onEdit,
+  onTakeAttendance,
 }: {
   classes: CourseDetail['classes'];
   canEdit: boolean;
   onEdit: (klass: CourseClass) => void;
+  onTakeAttendance: (klass: CourseClass) => void;
 }) {
   if (classes.length === 0)
     return <p className="text-sm text-muted-foreground">No classes scheduled.</p>;
@@ -474,10 +488,19 @@ function ClassesTable({
                   )}
                 </td>
                 {canEdit && (
-                  <td className="p-3 text-right">
-                    <Button size="sm" variant="outline" onClick={() => onEdit(c)}>
-                      Edit
-                    </Button>
+                  <td className="p-3">
+                    <div className="flex justify-end gap-1">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => onTakeAttendance(c)}
+                      >
+                        Attendance
+                      </Button>
+                      <Button size="sm" variant="outline" onClick={() => onEdit(c)}>
+                        Edit
+                      </Button>
+                    </div>
                   </td>
                 )}
               </tr>
