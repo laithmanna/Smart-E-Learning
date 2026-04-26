@@ -16,6 +16,7 @@ import type {
   Exam,
   Role,
 } from '@/lib/types';
+import { CreateExamDialog } from './_create-exam-dialog';
 import { EditClassDialog } from './_edit-class-dialog';
 import { EnrollStudentsDialog } from './_enroll-students-dialog';
 
@@ -41,6 +42,7 @@ export default function CourseDetailPage() {
   const [deleteBusy, setDeleteBusy] = useState(false);
   const [editingClass, setEditingClass] = useState<CourseClass | null>(null);
   const [enrollOpen, setEnrollOpen] = useState(false);
+  const [examCreateOpen, setExamCreateOpen] = useState(false);
 
   const canManage = user && CAN_MANAGE.includes(user.role);
   const canEditClass = user && CAN_EDIT_CLASS.includes(user.role);
@@ -212,7 +214,14 @@ export default function CourseDetailPage() {
           onEnroll={() => setEnrollOpen(true)}
         />
       )}
-      {tab === 'exams' && <ExamsTable exams={exams} />}
+      {tab === 'exams' && (
+        <ExamsSection
+          exams={exams}
+          courseId={course.id}
+          canCreate={!!canEditClass && !course.isClosed}
+          onCreate={() => setExamCreateOpen(true)}
+        />
+      )}
       {tab === 'attachments' && <AttachmentsList items={course.attachments} />}
 
       <EditClassDialog
@@ -236,6 +245,16 @@ export default function CourseDetailPage() {
         enrolledStudentIds={new Set(students?.map((r) => r.studentId) ?? [])}
         onClose={() => setEnrollOpen(false)}
         onSuccess={() => refreshStudents()}
+      />
+
+      <CreateExamDialog
+        open={examCreateOpen}
+        courseId={course.id}
+        onClose={() => setExamCreateOpen(false)}
+        onCreated={(exam) => {
+          setExams((prev) => (prev ? [...prev, { ...exam, _count: { questions: 0, results: 0 } }] : [exam]));
+          router.push(`/courses/${course.id}/exams/${exam.id}`);
+        }}
       />
 
       <Dialog
@@ -428,41 +447,71 @@ function StudentsSection({
   );
 }
 
-function ExamsTable({ exams }: { exams: Exam[] | null }) {
-  if (!exams) return <p className="text-sm text-muted-foreground">Loading…</p>;
-  if (exams.length === 0)
-    return <p className="text-sm text-muted-foreground">No exams created yet.</p>;
+function ExamsSection({
+  exams,
+  courseId,
+  canCreate,
+  onCreate,
+}: {
+  exams: Exam[] | null;
+  courseId: string;
+  canCreate: boolean;
+  onCreate: () => void;
+}) {
   return (
-    <Card className="overflow-hidden">
-      <table className="w-full text-sm">
-        <thead className="bg-muted/50 text-left text-xs uppercase text-muted-foreground">
-          <tr>
-            <th className="p-3">Name</th>
-            <th className="p-3">Date</th>
-            <th className="p-3">Type</th>
-            <th className="p-3">Total marks</th>
-            <th className="p-3">Questions</th>
-            <th className="p-3">Submitted</th>
-          </tr>
-        </thead>
-        <tbody className="divide-y">
-          {exams.map((e) => (
-            <tr key={e.id}>
-              <td className="p-3 font-medium">{e.examName}</td>
-              <td className="p-3">{fmtDate(e.examDate)}</td>
-              <td className="p-3">
-                <span className="rounded-full bg-secondary px-2 py-0.5 text-xs">
-                  {e.examType === 'MULTIPLE_CHOICE' ? 'MCQ' : 'Free text'}
-                </span>
-              </td>
-              <td className="p-3">{e.totalMarks}</td>
-              <td className="p-3">{e._count?.questions ?? 0}</td>
-              <td className="p-3">{e._count?.results ?? 0}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </Card>
+    <div className="space-y-3">
+      {canCreate && (
+        <div className="flex justify-end">
+          <Button size="sm" onClick={onCreate}>
+            + New exam
+          </Button>
+        </div>
+      )}
+      {!exams && <p className="text-sm text-muted-foreground">Loading…</p>}
+      {exams && exams.length === 0 && (
+        <p className="text-sm text-muted-foreground">No exams created yet.</p>
+      )}
+      {exams && exams.length > 0 && (
+        <Card className="overflow-hidden">
+          <table className="w-full text-sm">
+            <thead className="bg-muted/50 text-left text-xs uppercase text-muted-foreground">
+              <tr>
+                <th className="p-3">Name</th>
+                <th className="p-3">Date</th>
+                <th className="p-3">Type</th>
+                <th className="p-3">Total marks</th>
+                <th className="p-3">Questions</th>
+                <th className="p-3">Submitted</th>
+                <th className="p-3"></th>
+              </tr>
+            </thead>
+            <tbody className="divide-y">
+              {exams.map((e) => (
+                <tr
+                  key={e.id}
+                  className="cursor-pointer transition hover:bg-accent"
+                  onClick={() => {
+                    window.location.href = `/courses/${courseId}/exams/${e.id}`;
+                  }}
+                >
+                  <td className="p-3 font-medium">{e.examName}</td>
+                  <td className="p-3">{fmtDate(e.examDate)}</td>
+                  <td className="p-3">
+                    <span className="rounded-full bg-secondary px-2 py-0.5 text-xs">
+                      {e.examType === 'MULTIPLE_CHOICE' ? 'MCQ' : 'Free text'}
+                    </span>
+                  </td>
+                  <td className="p-3">{e.totalMarks}</td>
+                  <td className="p-3">{e._count?.questions ?? 0}</td>
+                  <td className="p-3">{e._count?.results ?? 0}</td>
+                  <td className="p-3 text-right text-xs text-muted-foreground">→</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </Card>
+      )}
+    </div>
   );
 }
 

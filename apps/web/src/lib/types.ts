@@ -74,14 +74,44 @@ export interface EnrollmentRow {
   };
 }
 
+export type ExamType = 'MULTIPLE_CHOICE' | 'FREE_TEXT';
+
 export interface Exam {
   id: string;
   courseId: string;
   examName: string;
   examDate: string;
   totalMarks: number;
-  examType: 'MULTIPLE_CHOICE' | 'FREE_TEXT';
+  examType: ExamType;
   _count?: { questions: number; results: number };
+}
+
+export interface Question {
+  id: string;
+  examId: string;
+  questionText: string;
+  option1: string | null;
+  option2: string | null;
+  option3: string | null;
+  option4: string | null;
+  correctOption: number | null;
+}
+
+export interface ExamDetail extends Exam {
+  questions: Question[];
+  course: { id: string; courseName: string };
+}
+
+export interface ExamResultRow {
+  id: string;
+  examId: string;
+  studentId: string;
+  marksObtained: number;
+  student: {
+    id: string;
+    name: string;
+    user: { email: string };
+  };
 }
 
 export interface Student {
