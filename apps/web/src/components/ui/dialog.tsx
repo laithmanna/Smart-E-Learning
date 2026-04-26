@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { cn } from '@/lib/utils';
 
 interface DialogProps {
@@ -12,19 +12,37 @@ interface DialogProps {
   className?: string;
 }
 
+// Track how many dialogs are currently open so we only toggle body scroll once.
+let openCount = 0;
+
 export function Dialog({ open, onClose, title, description, children, className }: DialogProps) {
+  // Always-current onClose, no need to depend on it in the effect
+  const onCloseRef = useRef(onClose);
+  useEffect(() => {
+    onCloseRef.current = onClose;
+  }, [onClose]);
+
   useEffect(() => {
     if (!open) return;
+
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose();
+      if (e.key === 'Escape') onCloseRef.current();
     };
     document.addEventListener('keydown', onKey);
-    document.body.style.overflow = 'hidden';
+
+    if (openCount === 0) {
+      document.body.style.overflow = 'hidden';
+    }
+    openCount++;
+
     return () => {
       document.removeEventListener('keydown', onKey);
-      document.body.style.overflow = '';
+      openCount = Math.max(0, openCount - 1);
+      if (openCount === 0) {
+        document.body.style.overflow = '';
+      }
     };
-  }, [open, onClose]);
+  }, [open]);
 
   if (!open) return null;
 
