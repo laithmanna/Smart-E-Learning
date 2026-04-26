@@ -10,13 +10,16 @@ import { useAuth } from '@/hooks/use-auth';
 import { api } from '@/lib/api';
 import { cn, uploadUrl } from '@/lib/utils';
 import type {
+  CourseClass,
   CourseDetail,
   EnrollmentRow,
   Exam,
   Role,
 } from '@/lib/types';
+import { EditClassDialog } from './_edit-class-dialog';
 
 const CAN_MANAGE: Role[] = ['SUPER_ADMIN', 'ADMIN', 'COORDINATOR'];
+const CAN_EDIT_CLASS: Role[] = ['SUPER_ADMIN', 'ADMIN', 'COORDINATOR', 'TRAINER'];
 
 type Tab = 'classes' | 'students' | 'exams' | 'attachments';
 
@@ -35,8 +38,10 @@ export default function CourseDetailPage() {
   const [closeBusy, setCloseBusy] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [deleteBusy, setDeleteBusy] = useState(false);
+  const [editingClass, setEditingClass] = useState<CourseClass | null>(null);
 
   const canManage = user && CAN_MANAGE.includes(user.role);
+  const canEditClass = user && CAN_EDIT_CLASS.includes(user.role);
 
   useEffect(() => {
     if (!id) return;
@@ -184,10 +189,31 @@ export default function CourseDetailPage() {
         </nav>
       </div>
 
-      {tab === 'classes' && <ClassesTable classes={course.classes} />}
+      {tab === 'classes' && (
+        <ClassesTable
+          classes={course.classes}
+          canEdit={!!canEditClass}
+          onEdit={(k) => setEditingClass(k)}
+        />
+      )}
       {tab === 'students' && <StudentsTable rows={students} />}
       {tab === 'exams' && <ExamsTable exams={exams} />}
       {tab === 'attachments' && <AttachmentsList items={course.attachments} />}
+
+      <EditClassDialog
+        klass={editingClass}
+        onClose={() => setEditingClass(null)}
+        onUpdated={(updated) => {
+          setCourse((prev) =>
+            prev
+              ? {
+                  ...prev,
+                  classes: prev.classes.map((c) => (c.id === updated.id ? updated : c)),
+                }
+              : prev,
+          );
+        }}
+      />
 
       <Dialog
         open={confirmDelete}
@@ -251,7 +277,15 @@ function TabButton({
   );
 }
 
-function ClassesTable({ classes }: { classes: CourseDetail['classes'] }) {
+function ClassesTable({
+  classes,
+  canEdit,
+  onEdit,
+}: {
+  classes: CourseDetail['classes'];
+  canEdit: boolean;
+  onEdit: (klass: CourseClass) => void;
+}) {
   if (classes.length === 0)
     return <p className="text-sm text-muted-foreground">No classes scheduled.</p>;
   return (
@@ -265,34 +299,46 @@ function ClassesTable({ classes }: { classes: CourseDetail['classes'] }) {
             <th className="p-3">Time</th>
             <th className="p-3">Location</th>
             <th className="p-3">Meeting link</th>
+            {canEdit && <th className="p-3 text-right">Actions</th>}
           </tr>
         </thead>
         <tbody className="divide-y">
-          {classes.map((c, i) => (
-            <tr key={c.id}>
-              <td className="p-3 text-muted-foreground">{i + 1}</td>
-              <td className="p-3 font-medium">{c.topic}</td>
-              <td className="p-3">{fmtDate(c.classDate)}</td>
-              <td className="p-3">
-                {c.startTime} – {c.endTime}
-              </td>
-              <td className="p-3">{c.location ?? '—'}</td>
-              <td className="p-3">
-                {c.meetingLink && c.meetingLink !== 'NaN' ? (
-                  <a
-                    href={c.meetingLink}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="text-primary underline"
-                  >
-                    Join
-                  </a>
-                ) : (
-                  '—'
+          {classes.map((c, i) => {
+            const loc = c.location && c.location !== 'NaN' ? c.location : '—';
+            const link = c.meetingLink && c.meetingLink !== 'NaN' ? c.meetingLink : null;
+            return (
+              <tr key={c.id}>
+                <td className="p-3 text-muted-foreground">{i + 1}</td>
+                <td className="p-3 font-medium">{c.topic}</td>
+                <td className="p-3">{fmtDate(c.classDate)}</td>
+                <td className="p-3">
+                  {c.startTime} – {c.endTime}
+                </td>
+                <td className="p-3">{loc}</td>
+                <td className="p-3">
+                  {link ? (
+                    <a
+                      href={link}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="text-primary underline"
+                    >
+                      Join
+                    </a>
+                  ) : (
+                    '—'
+                  )}
+                </td>
+                {canEdit && (
+                  <td className="p-3 text-right">
+                    <Button size="sm" variant="outline" onClick={() => onEdit(c)}>
+                      Edit
+                    </Button>
+                  </td>
                 )}
-              </td>
-            </tr>
-          ))}
+              </tr>
+            );
+          })}
         </tbody>
       </table>
     </Card>
