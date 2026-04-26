@@ -17,6 +17,7 @@ import type {
   Role,
 } from '@/lib/types';
 import { EditClassDialog } from './_edit-class-dialog';
+import { EnrollStudentsDialog } from './_enroll-students-dialog';
 
 const CAN_MANAGE: Role[] = ['SUPER_ADMIN', 'ADMIN', 'COORDINATOR'];
 const CAN_EDIT_CLASS: Role[] = ['SUPER_ADMIN', 'ADMIN', 'COORDINATOR', 'TRAINER'];
@@ -39,9 +40,17 @@ export default function CourseDetailPage() {
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [deleteBusy, setDeleteBusy] = useState(false);
   const [editingClass, setEditingClass] = useState<CourseClass | null>(null);
+  const [enrollOpen, setEnrollOpen] = useState(false);
 
   const canManage = user && CAN_MANAGE.includes(user.role);
   const canEditClass = user && CAN_EDIT_CLASS.includes(user.role);
+
+  function refreshStudents() {
+    if (!id) return;
+    api<EnrollmentRow[]>(`/courses/${id}/students`)
+      .then(setStudents)
+      .catch(() => {});
+  }
 
   useEffect(() => {
     if (!id) return;
@@ -196,7 +205,13 @@ export default function CourseDetailPage() {
           onEdit={(k) => setEditingClass(k)}
         />
       )}
-      {tab === 'students' && <StudentsTable rows={students} />}
+      {tab === 'students' && (
+        <StudentsSection
+          rows={students}
+          canEnroll={!!canManage && !course.isClosed}
+          onEnroll={() => setEnrollOpen(true)}
+        />
+      )}
       {tab === 'exams' && <ExamsTable exams={exams} />}
       {tab === 'attachments' && <AttachmentsList items={course.attachments} />}
 
@@ -213,6 +228,14 @@ export default function CourseDetailPage() {
               : prev,
           );
         }}
+      />
+
+      <EnrollStudentsDialog
+        open={enrollOpen}
+        courseId={course.id}
+        enrolledStudentIds={new Set(students?.map((r) => r.studentId) ?? [])}
+        onClose={() => setEnrollOpen(false)}
+        onSuccess={() => refreshStudents()}
       />
 
       <Dialog
@@ -345,43 +368,63 @@ function ClassesTable({
   );
 }
 
-function StudentsTable({ rows }: { rows: EnrollmentRow[] | null }) {
-  if (!rows) return <p className="text-sm text-muted-foreground">Loading…</p>;
-  if (rows.length === 0)
-    return <p className="text-sm text-muted-foreground">No students enrolled yet.</p>;
+function StudentsSection({
+  rows,
+  canEnroll,
+  onEnroll,
+}: {
+  rows: EnrollmentRow[] | null;
+  canEnroll: boolean;
+  onEnroll: () => void;
+}) {
   return (
-    <Card className="overflow-hidden">
-      <table className="w-full text-sm">
-        <thead className="bg-muted/50 text-left text-xs uppercase text-muted-foreground">
-          <tr>
-            <th className="p-3">Name</th>
-            <th className="p-3">Email</th>
-            <th className="p-3">Active</th>
-            <th className="p-3">Enrolled</th>
-          </tr>
-        </thead>
-        <tbody className="divide-y">
-          {rows.map((r) => (
-            <tr key={r.studentId}>
-              <td className="p-3 font-medium">{r.student.name}</td>
-              <td className="p-3 text-muted-foreground">{r.student.user.email}</td>
-              <td className="p-3">
-                {r.student.user.isActive ? (
-                  <span className="rounded-full bg-green-100 px-2 py-0.5 text-xs text-green-800 dark:bg-green-900/30 dark:text-green-300">
-                    Active
-                  </span>
-                ) : (
-                  <span className="rounded-full bg-red-100 px-2 py-0.5 text-xs text-red-800 dark:bg-red-900/30 dark:text-red-300">
-                    Inactive
-                  </span>
-                )}
-              </td>
-              <td className="p-3 text-muted-foreground">{fmtDate(r.createdAt)}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </Card>
+    <div className="space-y-3">
+      {canEnroll && (
+        <div className="flex justify-end">
+          <Button size="sm" onClick={onEnroll}>
+            + Enroll students
+          </Button>
+        </div>
+      )}
+      {!rows && <p className="text-sm text-muted-foreground">Loading…</p>}
+      {rows && rows.length === 0 && (
+        <p className="text-sm text-muted-foreground">No students enrolled yet.</p>
+      )}
+      {rows && rows.length > 0 && (
+        <Card className="overflow-hidden">
+          <table className="w-full text-sm">
+            <thead className="bg-muted/50 text-left text-xs uppercase text-muted-foreground">
+              <tr>
+                <th className="p-3">Name</th>
+                <th className="p-3">Email</th>
+                <th className="p-3">Active</th>
+                <th className="p-3">Enrolled</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y">
+              {rows.map((r) => (
+                <tr key={r.studentId}>
+                  <td className="p-3 font-medium">{r.student.name}</td>
+                  <td className="p-3 text-muted-foreground">{r.student.user.email}</td>
+                  <td className="p-3">
+                    {r.student.user.isActive ? (
+                      <span className="rounded-full bg-green-100 px-2 py-0.5 text-xs text-green-800 dark:bg-green-900/30 dark:text-green-300">
+                        Active
+                      </span>
+                    ) : (
+                      <span className="rounded-full bg-red-100 px-2 py-0.5 text-xs text-red-800 dark:bg-red-900/30 dark:text-red-300">
+                        Inactive
+                      </span>
+                    )}
+                  </td>
+                  <td className="p-3 text-muted-foreground">{fmtDate(r.createdAt)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </Card>
+      )}
+    </div>
   );
 }
 
