@@ -15,6 +15,7 @@
     "db:down": "docker compose down",
     "db:migrate": "pnpm --filter @sel/api prisma:migrate",
     "db:seed": "pnpm --filter @sel/api prisma:seed",
+    "db:seed:mocks": "pnpm --filter @sel/api prisma:seed:mocks",
     "db:studio": "pnpm --filter @sel/api prisma:studio"
   },
   "devDependencies": {
