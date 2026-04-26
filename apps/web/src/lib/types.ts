@@ -48,3 +48,13 @@ export interface Student {
   enrollmentDate: string;
   user: { id: string; email: string; isActive: boolean };
 }
+
+export interface Coordinator {
+  id: string;
+  userId: string;
+  name: string;
+  phone: string | null;
+  createdAt: string;
+  updatedAt: string;
+  user: { id: string; email: string; isActive: boolean };
+}
