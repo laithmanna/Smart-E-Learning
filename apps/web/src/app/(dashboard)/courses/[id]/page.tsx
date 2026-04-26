@@ -19,6 +19,7 @@ import type {
 } from '@/lib/types';
 import { CreateExamDialog } from './_create-exam-dialog';
 import { EditClassDialog } from './_edit-class-dialog';
+import { EditCourseDialog } from './_edit-course-dialog';
 import { EnrollStudentsDialog } from './_enroll-students-dialog';
 
 const CAN_MANAGE: Role[] = ['SUPER_ADMIN', 'ADMIN', 'COORDINATOR'];
@@ -44,6 +45,7 @@ export default function CourseDetailPage() {
   const [editingClass, setEditingClass] = useState<CourseClass | null>(null);
   const [enrollOpen, setEnrollOpen] = useState(false);
   const [examCreateOpen, setExamCreateOpen] = useState(false);
+  const [editCourseOpen, setEditCourseOpen] = useState(false);
   const [deletingAttachment, setDeletingAttachment] = useState<
     { id: string; fileName: string } | null
   >(null);
@@ -192,6 +194,11 @@ export default function CourseDetailPage() {
         </div>
         {canManage && (
           <div className="flex gap-2">
+            {!course.isClosed && (
+              <Button size="sm" variant="outline" onClick={() => setEditCourseOpen(true)}>
+                Edit course
+              </Button>
+            )}
             <Button
               variant={course.isClosed ? 'default' : 'outline'}
               size="sm"
@@ -283,6 +290,13 @@ export default function CourseDetailPage() {
           onDelete={(a) => setDeletingAttachment({ id: a.id, fileName: a.fileName })}
         />
       )}
+
+      <EditCourseDialog
+        open={editCourseOpen}
+        course={course}
+        onClose={() => setEditCourseOpen(false)}
+        onUpdated={(updated) => setCourse(updated)}
+      />
 
       <EditClassDialog
         klass={editingClass}
