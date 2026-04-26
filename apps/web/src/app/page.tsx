@@ -1,15 +1,21 @@
+'use client';
+
+import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { useAuth } from '@/hooks/use-auth';
+
 export default function HomePage() {
+  const router = useRouter();
+  const { user, loading } = useAuth();
+
+  useEffect(() => {
+    if (loading) return;
+    router.replace(user ? '/dashboard' : '/login');
+  }, [user, loading, router]);
+
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center p-8">
-      <div className="max-w-2xl text-center">
-        <h1 className="text-4xl font-bold tracking-tight">Smart E-Learning</h1>
-        <p className="mt-4 text-muted-foreground">
-          Corporate training LMS — NestJS + PostgreSQL + Next.js
-        </p>
-        <p className="mt-8 text-sm text-muted-foreground">
-          M1 Foundation complete. Auth and dashboards coming next.
-        </p>
-      </div>
-    </main>
+    <div className="flex min-h-screen items-center justify-center text-muted-foreground">
+      Loading…
+    </div>
   );
 }
