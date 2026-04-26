@@ -68,3 +68,17 @@ export interface Client {
   updatedAt: string;
   user: { id: string; email: string; isActive: boolean };
 }
+
+export interface Trainer {
+  id: string;
+  userId: string;
+  name: string;
+  phone: string | null;
+  specialization: string | null;
+  about: string | null;
+  photoPath: string | null;
+  cvPath: string | null;
+  createdAt: string;
+  updatedAt: string;
+  user: { id: string; email: string; isActive: boolean };
+}
