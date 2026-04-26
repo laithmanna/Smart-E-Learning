@@ -19,6 +19,7 @@ const NAV: NavItem[] = [
   { href: '/courses', label: 'Courses', roles: ['SUPER_ADMIN', 'ADMIN', 'COORDINATOR', 'TRAINER', 'STUDENT', 'CLIENT'] },
   { href: '/students', label: 'Students', roles: ['SUPER_ADMIN', 'ADMIN', 'COORDINATOR', 'TRAINER', 'CLIENT'] },
   { href: '/coordinators', label: 'Coordinators', roles: ['SUPER_ADMIN', 'ADMIN'] },
+  { href: '/clients', label: 'Clients', roles: ['SUPER_ADMIN', 'ADMIN'] },
 ];
 
 export function Sidebar() {

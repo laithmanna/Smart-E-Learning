@@ -58,3 +58,13 @@ export interface Coordinator {
   updatedAt: string;
   user: { id: string; email: string; isActive: boolean };
 }
+
+export interface Client {
+  id: string;
+  userId: string;
+  name: string;
+  phone: string | null;
+  createdAt: string;
+  updatedAt: string;
+  user: { id: string; email: string; isActive: boolean };
+}
