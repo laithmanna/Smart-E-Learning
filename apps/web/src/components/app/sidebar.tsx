@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Button } from '@/components/ui/button';
+import { ThemeToggle } from '@/components/app/theme-toggle';
 import { useAuth } from '@/hooks/use-auth';
 import { cn } from '@/lib/utils';
 import type { Role } from '@/lib/types';
@@ -56,9 +57,12 @@ export function Sidebar() {
         })}
       </nav>
 
-      <Button variant="outline" size="sm" onClick={() => void logout()}>
-        Sign out
-      </Button>
+      <div className="space-y-2">
+        <ThemeToggle />
+        <Button variant="outline" size="sm" onClick={() => void logout()} className="w-full">
+          Sign out
+        </Button>
+      </div>
     </aside>
   );
 }
