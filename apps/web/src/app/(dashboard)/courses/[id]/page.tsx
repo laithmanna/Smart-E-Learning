@@ -223,18 +223,20 @@ export default function CourseDetailPage() {
             <p className="text-sm text-muted-foreground">{course.projectName}</p>
           )}
         </div>
-        {canManage && (
-          <div className="flex gap-2">
+        <div className="flex gap-2">
+          {(canManage || user?.role === 'CLIENT') && (
             <Link href={`/courses/${course.id}/reports`}>
               <Button size="sm" variant="outline">
                 Reports
               </Button>
             </Link>
-            {!course.isClosed && (
-              <Button size="sm" variant="outline" onClick={() => setEditCourseOpen(true)}>
-                Edit course
-              </Button>
-            )}
+          )}
+          {canManage && !course.isClosed && (
+            <Button size="sm" variant="outline" onClick={() => setEditCourseOpen(true)}>
+              Edit course
+            </Button>
+          )}
+          {canManage && (
             <Button
               variant={course.isClosed ? 'default' : 'outline'}
               size="sm"
@@ -243,18 +245,18 @@ export default function CourseDetailPage() {
             >
               {closeBusy ? '…' : course.isClosed ? 'Reopen course' : 'Close course'}
             </Button>
-            {(user?.role === 'SUPER_ADMIN' || user?.role === 'ADMIN') && (
-              <Button
-                variant="destructive"
-                size="sm"
-                onClick={() => setConfirmDelete(true)}
-                disabled={deleteBusy}
-              >
-                Delete
-              </Button>
-            )}
-          </div>
-        )}
+          )}
+          {(user?.role === 'SUPER_ADMIN' || user?.role === 'ADMIN') && (
+            <Button
+              variant="destructive"
+              size="sm"
+              onClick={() => setConfirmDelete(true)}
+              disabled={deleteBusy}
+            >
+              Delete
+            </Button>
+          )}
+        </div>
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">

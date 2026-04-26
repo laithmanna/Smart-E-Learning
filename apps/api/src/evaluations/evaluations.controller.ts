@@ -92,7 +92,7 @@ export class EvaluationsController {
     return this.evaluations.submit(id, user, dto.responses);
   }
 
-  @Roles(Role.SUPER_ADMIN, Role.ADMIN, Role.COORDINATOR, Role.TRAINER)
+  @Roles(Role.SUPER_ADMIN, Role.ADMIN, Role.COORDINATOR, Role.TRAINER, Role.CLIENT)
   @Get('evaluations/:id/report')
   report(@Param('id') id: string) {
     return this.evaluations.report(id);
