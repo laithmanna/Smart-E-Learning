@@ -2,7 +2,6 @@
 
 import {
   Building2,
-  Calendar,
   ChevronLeft,
   ChevronRight,
   ClipboardList,
@@ -10,10 +9,7 @@ import {
   GraduationCap,
   LayoutDashboard,
   LogOut,
-  Settings,
   Shield,
-  Sparkles,
-  TrendingUp,
   UserCog,
   Users,
   type LucideIcon,
@@ -225,26 +221,6 @@ export function Sidebar() {
           );
         })}
       </nav>
-
-      {/* Pro tip card — bottom of sidebar, gradient */}
-      {!collapsed && (
-        <div className="my-4 overflow-hidden rounded-2xl bg-gradient-brand p-4 text-white shadow-brand-md">
-          <div className="mb-2 flex items-center gap-1.5">
-            <Sparkles className="h-3.5 w-3.5" />
-            <p className="text-xs font-semibold uppercase tracking-wider">Pro tip</p>
-          </div>
-          <p className="text-sm leading-snug">
-            Set learning goals for your cohort and track impact.
-          </p>
-          <Link href="/courses">
-            <button className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-white/15 px-3 py-1.5 text-xs font-semibold backdrop-blur transition hover:bg-white/25">
-              <TrendingUp className="h-3.5 w-3.5" />
-              Set goals
-              <ChevronRight className={cn('h-3.5 w-3.5', isRtl && 'rotate-180')} />
-            </button>
-          </Link>
-        </div>
-      )}
 
       {/* Footer toggles */}
       <div className={cn('space-y-2', collapsed && 'flex flex-col items-center')}>
