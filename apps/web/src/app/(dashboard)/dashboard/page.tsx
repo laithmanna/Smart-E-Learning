@@ -22,7 +22,7 @@ import {
 } from 'recharts';
 import { Card, CardContent } from '@/components/ui/card';
 import { useAuth } from '@/hooks/use-auth';
-import { useT } from '@/i18n/provider';
+import { useLocale, useT } from '@/i18n/provider';
 import { api } from '@/lib/api';
 import { cn } from '@/lib/utils';
 
@@ -75,6 +75,7 @@ function makeSpark(seed: number, n = 14, base = 30): { v: number }[] {
 
 export default function DashboardPage() {
   const t = useT();
+  const { locale } = useLocale();
   const { user } = useAuth();
   const [stats, setStats] = useState<Stats | null>(null);
   const [hero, setHero] = useState<TodayHero | null>(null);
@@ -100,10 +101,50 @@ export default function DashboardPage() {
   if (error) return <p className="text-destructive">{error}</p>;
   if (!stats) return <p className="text-muted-foreground">{t('common.loading')}</p>;
 
-  const greetingRaw = user?.email?.split('@')[0] ?? 'there';
-  const greetingName = greetingRaw.replace(/[^a-zA-Z]/g, '') || 'there';
-  const greetingDisplay =
-    greetingName.charAt(0).toUpperCase() + greetingName.slice(1);
+  const greetingRaw = user?.email?.split('@')[0] ?? '';
+  const greetingName = greetingRaw.replace(/[^a-zA-Z]/g, '');
+  const greetingDisplay = greetingName
+    ? greetingName.charAt(0).toUpperCase() + greetingName.slice(1)
+    : '';
+
+  // Time-of-day greeting
+  const hour = new Date().getHours();
+  const greetingKey =
+    hour < 12 ? 'dashboard.goodMorning' : hour < 18 ? 'dashboard.goodAfternoon' : 'dashboard.goodEvening';
+
+  // Build the "X classes today" line based on locale (digits in Arabic, words in English)
+  function classesTodayText(n: number): string {
+    if (n === 0) return t('dashboard.classesToday_zero');
+    if (n === 1) return t('dashboard.classesToday_one');
+    const display = locale === 'en' ? nWord(n) : String(n);
+    return t('dashboard.classesToday_other').replace('{count}', display);
+  }
+
+  // Hero description
+  function heroDescription(h: TodayHero): string {
+    const coursesPlural = h.activeCourses === 1 ? '' : 's';
+    if (h.attendancePct === null) {
+      return t('dashboard.heroDescriptionNoAttendance')
+        .replace('{students}', String(h.students))
+        .replace('{courses}', String(h.activeCourses))
+        .replace('{coursesPlural}', coursesPlural);
+    }
+    return t('dashboard.heroDescription')
+      .replace('{students}', String(h.students))
+      .replace('{courses}', String(h.activeCourses))
+      .replace('{coursesPlural}', coursesPlural)
+      .replace('{pct}', String(h.attendancePct));
+  }
+
+  // Compute up-next status label from status + statusLabel (backend gives "In 2h" — extract hours for translation)
+  function upNextLabel(item: UpNextItem): string {
+    if (item.status === 'live') return t('dashboard.statusLive');
+    if (item.status === 'scheduled') return t('dashboard.statusScheduled');
+    // pending → backend label is "Soon" or "In Xh"
+    const m = /^In\s+(\d+)h$/i.exec(item.statusLabel);
+    if (m) return t('dashboard.statusInHours').replace('{h}', m[1] ?? '');
+    return t('dashboard.statusSoon');
+  }
 
   type KpiCfg = {
     icon: LucideIcon;
@@ -119,7 +160,7 @@ export default function DashboardPage() {
   const kpis: KpiCfg[] = [
     {
       icon: GraduationCap,
-      label: 'Active courses',
+      label: t('dashboard.kpiActiveCourses'),
       value: Number(stats.coursesActive ?? 0),
       delta: '14%',
       deltaUp: true,
@@ -129,8 +170,8 @@ export default function DashboardPage() {
     },
     {
       icon: Users,
-      label: 'Enrolled students',
-      value: Number(stats.students ?? 0),
+      label: t('dashboard.kpiEnrolledStudents'),
+      value: hero?.students ?? Number(stats.students ?? 0),
       delta: '24',
       deltaUp: true,
       iconBg: 'bg-blue-50 dark:bg-blue-900/20',
@@ -139,8 +180,10 @@ export default function DashboardPage() {
     },
     {
       icon: TrendingUp,
-      label: 'Attendance rate',
-      value: '94%',
+      label: t('dashboard.kpiAttendanceRate'),
+      value: hero?.attendancePct !== null && hero?.attendancePct !== undefined
+        ? `${hero.attendancePct}%`
+        : '—',
       delta: '2.1pt',
       deltaUp: true,
       iconBg: 'bg-purple-50 dark:bg-purple-900/20',
@@ -149,7 +192,7 @@ export default function DashboardPage() {
     },
     {
       icon: ClipboardList,
-      label: 'Pending evaluations',
+      label: t('dashboard.kpiPendingEvaluations'),
       value: Number(stats.evaluationsPublished ?? 3),
       delta: '5',
       deltaUp: false,
@@ -159,7 +202,7 @@ export default function DashboardPage() {
     },
   ];
 
-  const todayStr = new Date().toLocaleDateString('en-US', {
+  const todayStr = new Date().toLocaleDateString(locale === 'ar' ? 'ar' : 'en-US', {
     weekday: 'long',
     year: 'numeric',
     month: 'long',
@@ -173,24 +216,15 @@ export default function DashboardPage() {
         <CardContent className="grid gap-6 p-8 md:grid-cols-[1fr_auto] md:items-start md:gap-10">
           <div className="space-y-3">
             <p className="text-2xl font-semibold leading-tight md:text-[28px]">
-              Good morning, {greetingDisplay} <span className="inline-block">👋</span>
+              {t(greetingKey as 'dashboard.goodMorning')}
+              {greetingDisplay ? `, ${greetingDisplay}` : ''}{' '}
+              <span className="inline-block">👋</span>
             </p>
             <p className="text-2xl font-bold text-gradient-brand md:text-[28px]">
-              {hero
-                ? hero.classesToday === 0
-                  ? 'No classes today.'
-                  : hero.classesToday === 1
-                    ? 'One class today.'
-                    : `${nWord(hero.classesToday)} classes today.`
-                : '…'}
+              {hero ? classesTodayText(hero.classesToday) : '…'}
             </p>
             <p className="max-w-xl text-sm leading-relaxed text-muted-foreground">
-              {hero
-                ? `${hero.students} students across ${hero.activeCourses} active course${hero.activeCourses === 1 ? '' : 's'}` +
-                  (hero.attendancePct !== null
-                    ? ` — overall attendance is at ${hero.attendancePct}%.`
-                    : '.')
-                : 'Loading live numbers…'}
+              {hero ? heroDescription(hero) : t('dashboard.loadingLive')}
             </p>
           </div>
 
@@ -200,16 +234,16 @@ export default function DashboardPage() {
                 <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-green-400 opacity-75" />
                 <span className="relative inline-flex h-2 w-2 rounded-full bg-green-500" />
               </span>
-              Live · synced 2s ago
+              {t('dashboard.liveSync')}
             </span>
-            <p className="text-sm font-medium text-muted-foreground md:text-right">
+            <p className="text-sm font-medium text-muted-foreground md:text-end">
               {todayStr}
             </p>
             <Link
               href="/courses"
               className="inline-flex items-center gap-1 text-sm font-semibold text-primary hover:underline"
             >
-              View sync details
+              {t('dashboard.viewSyncDetails')}
               <ArrowUpRight className="h-3.5 w-3.5" />
             </Link>
           </div>
@@ -271,15 +305,19 @@ export default function DashboardPage() {
           <CardContent className="space-y-4 p-6">
             <div className="flex items-start justify-between">
               <div>
-                <p className="text-base font-semibold">Enrollment momentum</p>
+                <p className="text-base font-semibold">{t('dashboard.enrollmentMomentum')}</p>
                 <p className="text-xs text-muted-foreground">
-                  Students added per week, last 12 weeks
+                  {t('dashboard.enrollmentMomentumDesc')}
                 </p>
               </div>
               <div className="flex gap-1">
-                {['4W', '12W', 'YTD'].map((p, i) => (
+                {[
+                  { key: 'period4w', i: 0 },
+                  { key: 'period12w', i: 1 },
+                  { key: 'periodYtd', i: 2 },
+                ].map(({ key, i }) => (
                   <button
-                    key={p}
+                    key={key}
                     className={cn(
                       'rounded-full px-3 py-1 text-xs font-semibold transition',
                       i === 1
@@ -287,7 +325,7 @@ export default function DashboardPage() {
                         : 'text-muted-foreground hover:bg-secondary/60',
                     )}
                   >
-                    {p}
+                    {t(`dashboard.${key}` as 'dashboard.period4w')}
                   </button>
                 ))}
               </div>
@@ -336,7 +374,7 @@ export default function DashboardPage() {
                   <Area
                     type="monotone"
                     dataKey="enrollments"
-                    name="New enrollments"
+                    name={t('dashboard.legendNewEnrollments')}
                     stroke="#6D5DF6"
                     strokeWidth={2.5}
                     fill="url(#enroll-1)"
@@ -344,7 +382,7 @@ export default function DashboardPage() {
                   <Area
                     type="monotone"
                     dataKey="completions"
-                    name="Completions"
+                    name={t('dashboard.legendCompletions')}
                     stroke="#60A5FA"
                     strokeWidth={2.5}
                     fill="url(#enroll-2)"
@@ -355,10 +393,10 @@ export default function DashboardPage() {
             </div>
             <div className="flex items-center gap-4 text-xs text-muted-foreground">
               <span className="flex items-center gap-1.5">
-                <span className="h-2 w-2 rounded-full bg-[#6D5DF6]" /> New enrollments
+                <span className="h-2 w-2 rounded-full bg-[#6D5DF6]" /> {t('dashboard.legendNewEnrollments')}
               </span>
               <span className="flex items-center gap-1.5">
-                <span className="h-2 w-2 rounded-full bg-[#60A5FA]" /> Completions
+                <span className="h-2 w-2 rounded-full bg-[#60A5FA]" /> {t('dashboard.legendCompletions')}
               </span>
             </div>
           </CardContent>
@@ -368,14 +406,14 @@ export default function DashboardPage() {
           <CardContent className="space-y-4 p-6">
             <div className="flex items-start justify-between">
               <div>
-                <p className="text-base font-semibold">Up next</p>
-                <p className="text-xs text-muted-foreground">Today &amp; tomorrow</p>
+                <p className="text-base font-semibold">{t('dashboard.upNext')}</p>
+                <p className="text-xs text-muted-foreground">{t('dashboard.upNextSubtitle')}</p>
               </div>
               <Link
                 href="/courses"
                 className="text-xs font-semibold text-primary hover:underline"
               >
-                Calendar →
+                {t('dashboard.calendar')} →
               </Link>
             </div>
             {!upNext && (
@@ -383,7 +421,7 @@ export default function DashboardPage() {
             )}
             {upNext && upNext.length === 0 && (
               <p className="text-sm text-muted-foreground">
-                Nothing scheduled in the next 7 days.
+                {t('dashboard.nothingScheduled')}
               </p>
             )}
             {upNext && upNext.length > 0 && (
@@ -409,7 +447,7 @@ export default function DashboardPage() {
                         PILL_STYLES[u.status],
                       )}
                     >
-                      {u.statusLabel}
+                      {upNextLabel(u)}
                     </span>
                   </li>
                 ))}
