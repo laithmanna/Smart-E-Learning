@@ -11,4 +11,19 @@ export class DashboardController {
   stats(@CurrentUser() user: AuthenticatedUser) {
     return this.dashboard.getStats(user);
   }
+
+  @Get('today')
+  today(@CurrentUser() user: AuthenticatedUser) {
+    return this.dashboard.getToday(user);
+  }
+
+  @Get('up-next')
+  upNext(@CurrentUser() user: AuthenticatedUser) {
+    return this.dashboard.getUpNext(user);
+  }
+
+  @Get('momentum')
+  momentum(@CurrentUser() user: AuthenticatedUser) {
+    return this.dashboard.getMomentum(user);
+  }
 }

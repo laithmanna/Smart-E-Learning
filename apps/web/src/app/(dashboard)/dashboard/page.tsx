@@ -28,21 +28,40 @@ import { cn } from '@/lib/utils';
 
 type Stats = Record<string, number | string>;
 
+interface TodayHero {
+  classesToday: number;
+  activeCourses: number;
+  students: number;
+  attendancePct: number | null;
+}
+
 interface UpNextItem {
   id: string;
   day: string;
   month: string;
   title: string;
   meta: string;
-  pill: { label: string; variant: 'live' | 'pending' | 'eval' | 'scheduled' };
+  status: 'live' | 'pending' | 'scheduled';
+  statusLabel: string;
 }
 
-const PILL_STYLES: Record<UpNextItem['pill']['variant'], string> = {
+interface MomentumPoint {
+  label: string;
+  enrollments: number;
+  completions: number;
+}
+
+const PILL_STYLES: Record<UpNextItem['status'], string> = {
   live: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300',
   pending: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300',
-  eval: 'bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-300',
   scheduled: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300',
 };
+
+// Spell out small numbers for a friendlier hero copy ("Five classes today")
+const NUMBER_WORDS = ['Zero', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine', 'Ten', 'Eleven', 'Twelve'];
+function nWord(n: number) {
+  return n >= 0 && n < NUMBER_WORDS.length ? NUMBER_WORDS[n] : String(n);
+}
 
 function makeSpark(seed: number, n = 14, base = 30): { v: number }[] {
   const out: { v: number }[] = [];
@@ -58,21 +77,24 @@ export default function DashboardPage() {
   const t = useT();
   const { user } = useAuth();
   const [stats, setStats] = useState<Stats | null>(null);
+  const [hero, setHero] = useState<TodayHero | null>(null);
+  const [upNext, setUpNext] = useState<UpNextItem[] | null>(null);
+  const [momentum, setMomentum] = useState<MomentumPoint[] | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     api<Stats>('/dashboard')
       .then(setStats)
       .catch((e: Error) => setError(e.message));
-  }, []);
-
-  const momentum = useMemo(() => {
-    const labels = ['Feb 3', 'Feb 24', 'Mar 17', 'Apr 7', 'Apr 28'];
-    return labels.map((label, i) => ({
-      label,
-      enrollments: 18 + i * 12 + Math.round(Math.sin(i * 1.3) * 4),
-      completions: 8 + i * 7 + Math.round(Math.cos(i * 0.9) * 3),
-    }));
+    api<TodayHero>('/dashboard/today')
+      .then(setHero)
+      .catch(() => {});
+    api<UpNextItem[]>('/dashboard/up-next')
+      .then(setUpNext)
+      .catch(() => {});
+    api<MomentumPoint[]>('/dashboard/momentum')
+      .then(setMomentum)
+      .catch(() => {});
   }, []);
 
   if (error) return <p className="text-destructive">{error}</p>;
@@ -137,41 +159,6 @@ export default function DashboardPage() {
     },
   ];
 
-  const upNext: UpNextItem[] = [
-    {
-      id: '1',
-      day: '27',
-      month: 'APR',
-      title: 'Advanced TypeScript — Class 7',
-      meta: 'Lina Habash · 13:00–14:00 · Room A',
-      pill: { label: 'Live now', variant: 'live' },
-    },
-    {
-      id: '2',
-      day: '27',
-      month: 'APR',
-      title: 'PMP Practice — Midterm exam',
-      meta: 'Globex cohort · 60 questions · MCQ',
-      pill: { label: 'In 2h', variant: 'pending' },
-    },
-    {
-      id: '3',
-      day: '28',
-      month: 'APR',
-      title: 'Cybersecurity Awareness',
-      meta: 'Initech · 56 enrolled · Eval due',
-      pill: { label: 'Eval pending', variant: 'eval' },
-    },
-    {
-      id: '4',
-      day: '29',
-      month: 'APR',
-      title: 'Data Analytics with SQL — Class 12',
-      meta: 'Hadi Khoury · 13:00–14:00',
-      pill: { label: 'Scheduled', variant: 'scheduled' },
-    },
-  ];
-
   const todayStr = new Date().toLocaleDateString('en-US', {
     weekday: 'long',
     year: 'numeric',
@@ -189,11 +176,21 @@ export default function DashboardPage() {
               Good morning, {greetingDisplay} <span className="inline-block">👋</span>
             </p>
             <p className="text-2xl font-bold text-gradient-brand md:text-[28px]">
-              Eight classes today.
+              {hero
+                ? hero.classesToday === 0
+                  ? 'No classes today.'
+                  : hero.classesToday === 1
+                    ? 'One class today.'
+                    : `${nWord(hero.classesToday)} classes today.`
+                : '…'}
             </p>
             <p className="max-w-xl text-sm leading-relaxed text-muted-foreground">
-              Three trainers are still finalizing materials. Acme Corp&apos;s quarterly
-              cohort wraps Friday — attendance is tracking ahead of plan.
+              {hero
+                ? `${hero.students} students across ${hero.activeCourses} active course${hero.activeCourses === 1 ? '' : 's'}` +
+                  (hero.attendancePct !== null
+                    ? ` — overall attendance is at ${hero.attendancePct}%.`
+                    : '.')
+                : 'Loading live numbers…'}
             </p>
           </div>
 
@@ -296,6 +293,12 @@ export default function DashboardPage() {
               </div>
             </div>
             <div className="h-72">
+              {!momentum && (
+                <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
+                  {t('common.loading')}
+                </div>
+              )}
+              {momentum && (
               <ResponsiveContainer width="100%" height="100%">
                 <AreaChart data={momentum} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
                   <defs>
@@ -348,6 +351,7 @@ export default function DashboardPage() {
                   />
                 </AreaChart>
               </ResponsiveContainer>
+              )}
             </div>
             <div className="flex items-center gap-4 text-xs text-muted-foreground">
               <span className="flex items-center gap-1.5">
@@ -374,33 +378,43 @@ export default function DashboardPage() {
                 Calendar →
               </Link>
             </div>
-            <ul className="space-y-1">
-              {upNext.map((u) => (
-                <li
-                  key={u.id}
-                  className="flex items-center gap-3 rounded-2xl p-2 transition hover:bg-secondary/60"
-                >
-                  <div className="flex h-12 w-12 shrink-0 flex-col items-center justify-center rounded-xl bg-gradient-brand-soft text-center leading-none">
-                    <span className="text-base font-bold text-primary">{u.day}</span>
-                    <span className="text-[10px] font-medium text-muted-foreground">
-                      {u.month}
-                    </span>
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-semibold">{u.title}</p>
-                    <p className="truncate text-xs text-muted-foreground">{u.meta}</p>
-                  </div>
-                  <span
-                    className={cn(
-                      'shrink-0 rounded-full px-2 py-0.5 text-[11px] font-semibold',
-                      PILL_STYLES[u.pill.variant],
-                    )}
+            {!upNext && (
+              <p className="text-sm text-muted-foreground">{t('common.loading')}</p>
+            )}
+            {upNext && upNext.length === 0 && (
+              <p className="text-sm text-muted-foreground">
+                Nothing scheduled in the next 7 days.
+              </p>
+            )}
+            {upNext && upNext.length > 0 && (
+              <ul className="space-y-1">
+                {upNext.slice(0, 4).map((u) => (
+                  <li
+                    key={u.id}
+                    className="flex items-center gap-3 rounded-2xl p-2 transition hover:bg-secondary/60"
                   >
-                    {u.pill.label}
-                  </span>
-                </li>
-              ))}
-            </ul>
+                    <div className="flex h-12 w-12 shrink-0 flex-col items-center justify-center rounded-xl bg-gradient-brand-soft text-center leading-none">
+                      <span className="text-base font-bold text-primary">{u.day}</span>
+                      <span className="text-[10px] font-medium text-muted-foreground">
+                        {u.month}
+                      </span>
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-semibold">{u.title}</p>
+                      <p className="truncate text-xs text-muted-foreground">{u.meta}</p>
+                    </div>
+                    <span
+                      className={cn(
+                        'shrink-0 rounded-full px-2 py-0.5 text-[11px] font-semibold',
+                        PILL_STYLES[u.status],
+                      )}
+                    >
+                      {u.statusLabel}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            )}
           </CardContent>
         </Card>
       </div>
