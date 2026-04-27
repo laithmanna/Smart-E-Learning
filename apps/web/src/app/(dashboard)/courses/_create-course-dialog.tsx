@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
+import { useT } from '@/i18n/provider';
 import { api } from '@/lib/api';
 import type { Course } from '@/lib/types';
 
@@ -22,6 +23,7 @@ interface Props {
 }
 
 export function CreateCourseDialog({ open, onClose, onCreated }: Props) {
+  const t = useT();
   const [trainers, setTrainers] = useState<OptionRow[]>([]);
   const [coordinators, setCoordinators] = useState<OptionRow[]>([]);
   const [clients, setClients] = useState<OptionRow[]>([]);
@@ -103,12 +105,12 @@ export function CreateCourseDialog({ open, onClose, onCreated }: Props) {
           onClose();
         }
       }}
-      title="New course"
-      description="Classes will auto-generate Mon-Thu + Sun, skipping Friday & Saturday."
+      title={t('courses.newCourse').replace('+ ', '')}
+      description={t('courses.classesAutoNote')}
     >
       <form onSubmit={onSubmit} className="space-y-4">
         <div className="space-y-2">
-          <Label htmlFor="courseName">Course name *</Label>
+          <Label htmlFor="courseName">{t('courses.courseName')} *</Label>
           <Input
             id="courseName"
             value={courseName}
@@ -118,18 +120,18 @@ export function CreateCourseDialog({ open, onClose, onCreated }: Props) {
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="projectName">Project name</Label>
+          <Label htmlFor="projectName">{t('courses.projectName')}</Label>
           <Input
             id="projectName"
             value={projectName}
             onChange={(e) => setProjectName(e.target.value)}
-            placeholder="Optional"
+            placeholder={t('courses.optional')}
           />
         </div>
 
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-2">
-            <Label htmlFor="startDate">Start date *</Label>
+            <Label htmlFor="startDate">{t('courses.startDate')} *</Label>
             <Input
               id="startDate"
               type="date"
@@ -139,7 +141,7 @@ export function CreateCourseDialog({ open, onClose, onCreated }: Props) {
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="endDate">End date *</Label>
+            <Label htmlFor="endDate">{t('courses.endDate')} *</Label>
             <Input
               id="endDate"
               type="date"
@@ -151,7 +153,7 @@ export function CreateCourseDialog({ open, onClose, onCreated }: Props) {
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="location">Location</Label>
+          <Label htmlFor="location">{t('courses.location')}</Label>
           <Input
             id="location"
             value={location}
@@ -161,7 +163,7 @@ export function CreateCourseDialog({ open, onClose, onCreated }: Props) {
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="description">Description</Label>
+          <Label htmlFor="description">{t('common.description')}</Label>
           <Textarea
             id="description"
             value={description}
@@ -171,29 +173,29 @@ export function CreateCourseDialog({ open, onClose, onCreated }: Props) {
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="trainer">Trainer</Label>
+          <Label htmlFor="trainer">{t('courses.trainer')}</Label>
           <Select
             id="trainer"
             value={trainerId}
             onChange={(e) => setTrainerId(e.target.value)}
           >
-            <option value="">— none —</option>
-            {trainers.map((t) => (
-              <option key={t.id} value={t.id}>
-                {t.name}
+            <option value="">{t('common.none')}</option>
+            {trainers.map((tr) => (
+              <option key={tr.id} value={tr.id}>
+                {tr.name}
               </option>
             ))}
           </Select>
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="coordinator">Coordinator</Label>
+          <Label htmlFor="coordinator">{t('courses.coordinator')}</Label>
           <Select
             id="coordinator"
             value={coordinatorId}
             onChange={(e) => setCoordinatorId(e.target.value)}
           >
-            <option value="">— none —</option>
+            <option value="">{t('common.none')}</option>
             {coordinators.map((c) => (
               <option key={c.id} value={c.id}>
                 {c.name}
@@ -203,13 +205,13 @@ export function CreateCourseDialog({ open, onClose, onCreated }: Props) {
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="client">Client</Label>
+          <Label htmlFor="client">{t('courses.client')}</Label>
           <Select
             id="client"
             value={clientId}
             onChange={(e) => setClientId(e.target.value)}
           >
-            <option value="">— none —</option>
+            <option value="">{t('common.none')}</option>
             {clients.map((c) => (
               <option key={c.id} value={c.id}>
                 {c.name}
@@ -234,10 +236,10 @@ export function CreateCourseDialog({ open, onClose, onCreated }: Props) {
             }}
             disabled={submitting}
           >
-            Cancel
+            {t('common.cancel')}
           </Button>
           <Button type="submit" disabled={submitting}>
-            {submitting ? 'Creating…' : 'Create course'}
+            {submitting ? t('common.creating') : t('courses.newCourse').replace('+ ', '')}
           </Button>
         </div>
       </form>

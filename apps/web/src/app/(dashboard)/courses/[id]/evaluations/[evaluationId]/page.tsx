@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Dialog } from '@/components/ui/dialog';
 import { useAuth } from '@/hooks/use-auth';
+import { useT } from '@/i18n/provider';
 import { api } from '@/lib/api';
 import type {
   EvaluationDetail,
@@ -24,6 +25,7 @@ export default function EvaluationDetailPage() {
   const evaluationId = params?.evaluationId;
   const router = useRouter();
   const { user } = useAuth();
+  const t = useT();
 
   const [evalRec, setEvalRec] = useState<EvaluationDetail | null>(null);
   const [report, setReport] = useState<EvaluationReport | null>(null);
@@ -105,7 +107,7 @@ export default function EvaluationDetailPage() {
           href={`/courses/${courseId}`}
           className="text-sm text-muted-foreground hover:underline"
         >
-          ← Back to course
+          {t('common.backToCourse')}
         </Link>
         <p className="text-destructive">{error}</p>
       </div>
@@ -113,7 +115,7 @@ export default function EvaluationDetailPage() {
   }
 
   if (!evalRec) {
-    return <p className="text-muted-foreground">Loading…</p>;
+    return <p className="text-muted-foreground">{t('common.loading')}</p>;
   }
 
   return (
@@ -123,7 +125,7 @@ export default function EvaluationDetailPage() {
           href={`/courses/${courseId}`}
           className="text-sm text-muted-foreground hover:underline"
         >
-          ← Back to course
+          {t('common.backToCourse')}
         </Link>
       </div>
 
@@ -133,22 +135,22 @@ export default function EvaluationDetailPage() {
             <h1 className="text-2xl font-bold">{evalRec.name}</h1>
             {evalRec.isPublished ? (
               <span className="rounded-full bg-green-100 px-2 py-0.5 text-xs text-green-800 dark:bg-green-900/30 dark:text-green-300">
-                Published — students can fill it
+                {t('evaluation.published')}
               </span>
             ) : (
               <span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs text-amber-800 dark:bg-amber-900/30 dark:text-amber-300">
-                Draft — hidden from students
+                {t('evaluation.draft')}
               </span>
             )}
           </div>
           <p className="text-sm text-muted-foreground">
-            {evalRec.questions.length} question{evalRec.questions.length === 1 ? '' : 's'}
+            {evalRec.questions.length} {t('template.questions')}
           </p>
         </div>
         {canManage && (
           <div className="flex gap-2">
             <Button size="sm" onClick={() => setAddOpen(true)}>
-              + Add question
+              {t('evaluation.addQuestion')}
             </Button>
             <Button
               size="sm"
@@ -157,11 +159,11 @@ export default function EvaluationDetailPage() {
               disabled={publishBusy || (!evalRec.isPublished && evalRec.questions.length === 0)}
               title={
                 !evalRec.isPublished && evalRec.questions.length === 0
-                  ? 'Add at least one question before publishing'
+                  ? t('evaluation.publishGate')
                   : undefined
               }
             >
-              {publishBusy ? '…' : evalRec.isPublished ? 'Unpublish' : 'Publish'}
+              {publishBusy ? '…' : evalRec.isPublished ? t('evaluation.unpublish') : t('evaluation.publish')}
             </Button>
             <Button
               size="sm"
@@ -169,18 +171,18 @@ export default function EvaluationDetailPage() {
               onClick={() => setConfirmDeleteEval(true)}
               disabled={deleteEvalBusy}
             >
-              Delete
+              {t('common.delete')}
             </Button>
           </div>
         )}
       </div>
 
       <div>
-        <h2 className="mb-3 text-lg font-semibold">Questions</h2>
+        <h2 className="mb-3 text-lg font-semibold">{t('evaluation.questionsTitle')}</h2>
         {evalRec.questions.length === 0 ? (
           <Card>
             <CardContent className="py-12 text-center text-sm text-muted-foreground">
-              No questions yet.
+              {t('exam.noQuestions')}
               {canManage && (
                 <>
                   {' '}
@@ -188,7 +190,7 @@ export default function EvaluationDetailPage() {
                     onClick={() => setAddOpen(true)}
                     className="text-primary underline"
                   >
-                    Add the first one.
+                    {t('exam.addFirst')}
                   </button>
                 </>
               )}
@@ -201,7 +203,7 @@ export default function EvaluationDetailPage() {
                 <CardContent className="flex items-start justify-between gap-4 pt-6">
                   <div className="flex-1 space-y-1">
                     <p className="text-xs uppercase text-muted-foreground">
-                      Question {i + 1}
+                      {t('exam.question')} {i + 1}
                     </p>
                     <p className="font-medium">{q.question}</p>
                   </div>
@@ -211,7 +213,7 @@ export default function EvaluationDetailPage() {
                       variant="destructive"
                       onClick={() => setDeleting(q)}
                     >
-                      Delete
+                      {t('common.delete')}
                     </Button>
                   )}
                 </CardContent>
@@ -223,11 +225,11 @@ export default function EvaluationDetailPage() {
 
       {canManage && report && (
         <div>
-          <h2 className="mb-3 text-lg font-semibold">Responses</h2>
+          <h2 className="mb-3 text-lg font-semibold">{t('evaluation.responsesTitle')}</h2>
           {report.questions.every((q) => q.responses.length === 0) ? (
             <Card>
               <CardContent className="py-8 text-center text-sm text-muted-foreground">
-                No responses yet. Students will fill this once it&apos;s published.
+                {t('evaluation.noResponses')}
               </CardContent>
             </Card>
           ) : (
@@ -237,7 +239,7 @@ export default function EvaluationDetailPage() {
                   <CardContent className="space-y-3 pt-6">
                     <p className="font-medium">{q.question}</p>
                     {q.responses.length === 0 ? (
-                      <p className="text-sm text-muted-foreground">No responses yet.</p>
+                      <p className="text-sm text-muted-foreground">{t('evaluation.noResponsesShort')}</p>
                     ) : (
                       <ul className="divide-y rounded-md border">
                         {q.responses.map((r) => (
@@ -271,7 +273,7 @@ export default function EvaluationDetailPage() {
       <Dialog
         open={!!deleting}
         onClose={() => !deleteBusy && setDeleting(null)}
-        title="Delete question?"
+        title={t('exam.deleteQuestion')}
         description={
           deleting
             ? `"${deleting.question.slice(0, 80)}${deleting.question.length > 80 ? '…' : ''}"`
@@ -280,10 +282,10 @@ export default function EvaluationDetailPage() {
       >
         <div className="flex justify-end gap-2">
           <Button variant="outline" onClick={() => setDeleting(null)} disabled={deleteBusy}>
-            Cancel
+            {t('common.cancel')}
           </Button>
           <Button variant="destructive" onClick={() => void deleteQuestion()} disabled={deleteBusy}>
-            {deleteBusy ? 'Deleting…' : 'Delete'}
+            {deleteBusy ? t('common.deleting') : t('common.delete')}
           </Button>
         </div>
       </Dialog>
@@ -291,8 +293,8 @@ export default function EvaluationDetailPage() {
       <Dialog
         open={confirmDeleteEval}
         onClose={() => !deleteEvalBusy && setConfirmDeleteEval(false)}
-        title="Delete evaluation?"
-        description={`Permanently deletes "${evalRec.name}" with all questions and responses.`}
+        title={t('evaluation.deleteEvaluationConfirm')}
+        description={t('evaluation.deleteEvaluationDesc').replace('{name}', evalRec.name)}
       >
         <div className="flex justify-end gap-2">
           <Button
@@ -300,14 +302,14 @@ export default function EvaluationDetailPage() {
             onClick={() => setConfirmDeleteEval(false)}
             disabled={deleteEvalBusy}
           >
-            Cancel
+            {t('common.cancel')}
           </Button>
           <Button
             variant="destructive"
             onClick={() => void deleteEvaluation()}
             disabled={deleteEvalBusy}
           >
-            {deleteEvalBusy ? 'Deleting…' : 'Delete evaluation'}
+            {deleteEvalBusy ? t('common.deleting') : t('evaluation.deleteEvaluation')}
           </Button>
         </div>
       </Dialog>

@@ -6,6 +6,7 @@ import { Dialog } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { useT } from '@/i18n/provider';
 import { api } from '@/lib/api';
 import type { QuestionTemplate } from '@/lib/types';
 
@@ -16,6 +17,7 @@ interface Props {
 }
 
 export function CreateTemplateDialog({ open, onClose, onCreated }: Props) {
+  const t = useT();
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -58,28 +60,28 @@ export function CreateTemplateDialog({ open, onClose, onCreated }: Props) {
           onClose();
         }
       }}
-      title="New template"
-      description="Templates are reusable question banks. You can apply them to evaluations on any course."
+      title={t('template.newTemplate').replace('+ ', '')}
+      description={t('template.description2')}
     >
       <form onSubmit={onSubmit} className="space-y-4">
         <div className="space-y-2">
-          <Label htmlFor="tpl-title">Title *</Label>
+          <Label htmlFor="tpl-title">{t('evaluation.titleLabel')} *</Label>
           <Input
             id="tpl-title"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             required
-            placeholder="e.g. Standard course evaluation, Trainer review"
+            placeholder={t('evaluation.namePlaceholderTemplate')}
           />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="tpl-desc">Description</Label>
+          <Label htmlFor="tpl-desc">{t('common.description')}</Label>
           <Textarea
             id="tpl-desc"
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             rows={3}
-            placeholder="What is this template for?"
+            placeholder={t('evaluation.descriptionPlaceholder')}
           />
         </div>
         {error && (
@@ -97,10 +99,10 @@ export function CreateTemplateDialog({ open, onClose, onCreated }: Props) {
             }}
             disabled={submitting}
           >
-            Cancel
+            {t('common.cancel')}
           </Button>
           <Button type="submit" disabled={submitting}>
-            {submitting ? 'Creating…' : 'Create template'}
+            {submitting ? t('common.creating') : t('template.newTemplate').replace('+ ', '')}
           </Button>
         </div>
       </form>

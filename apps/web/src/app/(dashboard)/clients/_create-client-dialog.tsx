@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Dialog } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { useT } from '@/i18n/provider';
 import { api } from '@/lib/api';
 import type { Client } from '@/lib/types';
 
@@ -15,6 +16,7 @@ interface Props {
 }
 
 export function CreateClientDialog({ open, onClose, onCreated }: Props) {
+  const t = useT();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
@@ -63,16 +65,16 @@ export function CreateClientDialog({ open, onClose, onCreated }: Props) {
           onClose();
         }
       }}
-      title="New client"
-      description="Creates the user account too. Client can sign in to see their org's courses."
+      title={t('userMgmt.clientCreate')}
+      description={t('userMgmt.clientCreateDesc')}
     >
       <form onSubmit={onSubmit} className="space-y-4">
         <div className="space-y-2">
-          <Label htmlFor="name">Organization name *</Label>
+          <Label htmlFor="name">{t('userMgmt.organizationLabel')} *</Label>
           <Input id="name" value={name} onChange={(e) => setName(e.target.value)} required />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="email">Email *</Label>
+          <Label htmlFor="email">{t('common.email')} *</Label>
           <Input
             id="email"
             type="email"
@@ -83,11 +85,11 @@ export function CreateClientDialog({ open, onClose, onCreated }: Props) {
           />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="phone">Phone</Label>
+          <Label htmlFor="phone">{t('common.phone')}</Label>
           <Input id="phone" value={phone} onChange={(e) => setPhone(e.target.value)} />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="password">Initial password *</Label>
+          <Label htmlFor="password">{t('userMgmt.initialPassword')} *</Label>
           <Input
             id="password"
             type="text"
@@ -97,7 +99,7 @@ export function CreateClientDialog({ open, onClose, onCreated }: Props) {
             minLength={6}
           />
           <p className="text-xs text-muted-foreground">
-            Client should change it on first login.
+            {t('userMgmt.initialPasswordHelp')}
           </p>
         </div>
         {error && (
@@ -115,10 +117,10 @@ export function CreateClientDialog({ open, onClose, onCreated }: Props) {
             }}
             disabled={submitting}
           >
-            Cancel
+            {t('common.cancel')}
           </Button>
           <Button type="submit" disabled={submitting}>
-            {submitting ? 'Creating…' : 'Create client'}
+            {submitting ? t('common.creating') : t('userMgmt.clientCreating')}
           </Button>
         </div>
       </form>

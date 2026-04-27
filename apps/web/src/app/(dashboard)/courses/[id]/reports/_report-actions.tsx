@@ -3,6 +3,7 @@
 import { Download, Printer } from 'lucide-react';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
+import { useT } from '@/i18n/provider';
 import { getAccessToken } from '@/lib/api';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001/api';
@@ -14,6 +15,7 @@ interface Props {
 }
 
 export function ReportActions({ excelPath, excelFileName, onPrint }: Props) {
+  const t = useT();
   const [busy, setBusy] = useState(false);
 
   async function downloadExcel() {
@@ -52,7 +54,7 @@ export function ReportActions({ excelPath, excelFileName, onPrint }: Props) {
           disabled={busy}
         >
           <Download className="me-2 h-4 w-4" />
-          {busy ? 'Downloading…' : 'Excel'}
+          {busy ? t('common.downloading') : t('reports.excel')}
         </Button>
       )}
       <Button
@@ -64,7 +66,7 @@ export function ReportActions({ excelPath, excelFileName, onPrint }: Props) {
         }}
       >
         <Printer className="me-2 h-4 w-4" />
-        PDF / Print
+        {t('reports.pdfPrint')}
       </Button>
     </div>
   );

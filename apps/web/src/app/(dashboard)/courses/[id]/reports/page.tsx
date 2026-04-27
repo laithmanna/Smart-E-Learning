@@ -4,45 +4,47 @@ import { BarChart3, ClipboardCheck, FileBarChart, GraduationCap } from 'lucide-r
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-
-const CARDS = [
-  {
-    href: 'reports/full',
-    title: 'Full course report',
-    description: 'Aggregate stats across attendance, exams, evaluations and surveys.',
-    icon: FileBarChart,
-    color: 'text-blue-600 dark:text-blue-400',
-    bg: 'bg-blue-50 dark:bg-blue-900/20',
-  },
-  {
-    href: 'reports/attendance',
-    title: 'Attendance report',
-    description: 'Per-student and per-class attendance with charts and Excel export.',
-    icon: ClipboardCheck,
-    color: 'text-green-600 dark:text-green-400',
-    bg: 'bg-green-50 dark:bg-green-900/20',
-  },
-  {
-    href: 'reports/exams',
-    title: 'Exams report',
-    description: 'Average scores, distribution and per-student results across all exams.',
-    icon: GraduationCap,
-    color: 'text-purple-600 dark:text-purple-400',
-    bg: 'bg-purple-50 dark:bg-purple-900/20',
-  },
-  {
-    href: 'reports/evaluation',
-    title: 'Evaluation report',
-    description: 'Per-question rating breakdowns from student evaluations.',
-    icon: BarChart3,
-    color: 'text-orange-600 dark:text-orange-400',
-    bg: 'bg-orange-50 dark:bg-orange-900/20',
-  },
-];
+import { useT } from '@/i18n/provider';
 
 export default function ReportsLandingPage() {
   const params = useParams<{ id: string }>();
   const courseId = params?.id;
+  const t = useT();
+
+  const CARDS = [
+    {
+      href: 'reports/full',
+      title: t('reports.fullCourse'),
+      description: t('reports.fullCourseDesc'),
+      icon: FileBarChart,
+      color: 'text-blue-600 dark:text-blue-400',
+      bg: 'bg-blue-50 dark:bg-blue-900/20',
+    },
+    {
+      href: 'reports/attendance',
+      title: t('reports.attendance'),
+      description: t('reports.attendanceDesc'),
+      icon: ClipboardCheck,
+      color: 'text-green-600 dark:text-green-400',
+      bg: 'bg-green-50 dark:bg-green-900/20',
+    },
+    {
+      href: 'reports/exams',
+      title: t('reports.examsReport'),
+      description: t('reports.examsReportDesc'),
+      icon: GraduationCap,
+      color: 'text-purple-600 dark:text-purple-400',
+      bg: 'bg-purple-50 dark:bg-purple-900/20',
+    },
+    {
+      href: 'reports/evaluation',
+      title: t('reports.evaluation'),
+      description: t('reports.evaluationDesc'),
+      icon: BarChart3,
+      color: 'text-orange-600 dark:text-orange-400',
+      bg: 'bg-orange-50 dark:bg-orange-900/20',
+    },
+  ];
 
   return (
     <div className="space-y-6">
@@ -51,14 +53,14 @@ export default function ReportsLandingPage() {
           href={`/courses/${courseId}`}
           className="text-sm text-muted-foreground hover:underline"
         >
-          ← Back to course
+          {t('common.backToCourse')}
         </Link>
       </div>
 
       <div>
-        <h1 className="text-2xl font-bold">Reports</h1>
+        <h1 className="text-2xl font-bold">{t('reports.title')}</h1>
         <p className="text-sm text-muted-foreground">
-          Pick a report to see charts and download Excel / PDF.
+          {t('reports.pickReport')}
         </p>
       </div>
 
@@ -84,7 +86,7 @@ export default function ReportsLandingPage() {
                   </div>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-sm text-primary">View report →</p>
+                  <p className="text-sm text-primary">{t('reports.viewReport')}</p>
                 </CardContent>
               </Card>
             </Link>

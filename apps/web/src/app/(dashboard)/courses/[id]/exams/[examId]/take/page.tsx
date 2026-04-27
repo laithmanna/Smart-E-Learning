@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
 import { useAuth } from '@/hooks/use-auth';
+import { useT } from '@/i18n/provider';
 import { api } from '@/lib/api';
 import { cn } from '@/lib/utils';
 import type { ExamType } from '@/lib/types';
@@ -43,6 +44,7 @@ export default function TakeExamPage() {
   const courseId = params?.id;
   const examId = params?.examId;
   const { user } = useAuth();
+  const t = useT();
 
   const [exam, setExam] = useState<TakeExam | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -91,14 +93,14 @@ export default function TakeExamPage() {
           href={`/courses/${courseId}`}
           className="text-sm text-muted-foreground hover:underline"
         >
-          ← Back to course
+          {t('common.backToCourse')}
         </Link>
         <p className="text-destructive">{error}</p>
       </div>
     );
   }
   if (!exam) {
-    return <p className="text-muted-foreground">Loading…</p>;
+    return <p className="text-muted-foreground">{t('common.loading')}</p>;
   }
   if (user && user.role !== 'STUDENT') {
     return (
@@ -127,23 +129,23 @@ export default function TakeExamPage() {
             href={`/courses/${courseId}`}
             className="text-sm text-muted-foreground hover:underline"
           >
-            ← Back to course
+            {t('common.backToCourse')}
           </Link>
         </div>
         <div className="space-y-1">
           <h1 className="text-2xl font-bold">{exam.examName}</h1>
           <p className="text-sm text-muted-foreground">
-            Submitted on {submittedDate}
+            {t('exam.submittedOn').replace('{date}', submittedDate)}
           </p>
         </div>
         <Card>
           <CardContent className="space-y-4 pt-6 text-center">
             <p className="rounded-md bg-muted px-3 py-2 text-sm">
-              You&apos;ve already taken this exam — submissions are final.
+              {t('exam.alreadyTaken')}
             </p>
             {sub.result ? (
               <>
-                <p className="text-sm uppercase text-muted-foreground">Your score</p>
+                <p className="text-sm uppercase text-muted-foreground">{t('exam.yourScore')}</p>
                 <p className="text-5xl font-bold">
                   {sub.result.marksObtained}
                   <span className="text-2xl text-muted-foreground"> / {exam.totalMarks}</span>
@@ -154,11 +156,11 @@ export default function TakeExamPage() {
               </>
             ) : (
               <p className="text-sm text-muted-foreground">
-                Awaiting trainer grading. Your score will appear here once graded.
+                {t('exam.awaitingGrading')}
               </p>
             )}
             <Link href={`/courses/${courseId}`}>
-              <Button>Back to course</Button>
+              <Button>{t('common.backToCourse')}</Button>
             </Link>
           </CardContent>
         </Card>
@@ -175,14 +177,14 @@ export default function TakeExamPage() {
             href={`/courses/${courseId}`}
             className="text-sm text-muted-foreground hover:underline"
           >
-            ← Back to course
+            {t('common.backToCourse')}
           </Link>
         </div>
         <Card>
           <CardContent className="space-y-4 pt-6 text-center">
             {submitResult.autoGraded && submitResult.result ? (
               <>
-                <p className="text-sm uppercase text-muted-foreground">Your score</p>
+                <p className="text-sm uppercase text-muted-foreground">{t('exam.yourScore')}</p>
                 <p className="text-5xl font-bold">
                   {submitResult.result.marksObtained}
                   <span className="text-2xl text-muted-foreground"> / {exam.totalMarks}</span>
@@ -194,19 +196,19 @@ export default function TakeExamPage() {
                   %
                 </p>
                 <p className="text-sm text-muted-foreground">
-                  Graded automatically.
+                  {t('exam.autoGraded')}
                 </p>
               </>
             ) : (
               <>
-                <p className="text-2xl font-semibold">Submitted ✓</p>
+                <p className="text-2xl font-semibold">{t('exam.submittedShort')}</p>
                 <p className="text-sm text-muted-foreground">
-                  {submitResult.message ?? 'Your answers were submitted. Awaiting trainer grading.'}
+                  {submitResult.message ?? t('exam.awaitingGradingShort')}
                 </p>
               </>
             )}
             <Link href={`/courses/${courseId}`}>
-              <Button>Back to course</Button>
+              <Button>{t('common.backToCourse')}</Button>
             </Link>
           </CardContent>
         </Card>
@@ -227,7 +229,7 @@ export default function TakeExamPage() {
           href={`/courses/${courseId}`}
           className="text-sm text-muted-foreground hover:underline"
         >
-          ← Back to course
+          {t('common.backToCourse')}
         </Link>
       </div>
 
@@ -236,7 +238,9 @@ export default function TakeExamPage() {
           <div className="flex items-center gap-3">
             <h1 className="text-2xl font-bold">{exam.examName}</h1>
             <span className="rounded-full bg-secondary px-2 py-0.5 text-xs">
-              {exam.examType === 'MULTIPLE_CHOICE' ? 'MCQ — auto-graded' : 'Free text'}
+              {exam.examType === 'MULTIPLE_CHOICE'
+                ? `${t('exam.mcqShort')} — ${t('exam.autoGraded').replace('.', '')}`
+                : t('exam.freeTextShort')}
             </span>
           </div>
           <p className="text-sm text-muted-foreground">
@@ -254,7 +258,7 @@ export default function TakeExamPage() {
               <CardContent className="space-y-4 pt-6">
                 <div>
                   <p className="text-xs uppercase text-muted-foreground">
-                    Question {i + 1}
+                    {t('exam.question')} {i + 1}
                   </p>
                   <p className="mt-1 font-medium">{q.questionText}</p>
                 </div>
@@ -297,7 +301,7 @@ export default function TakeExamPage() {
                     onChange={(e) =>
                       setTextAnswers((p) => ({ ...p, [q.id]: e.target.value }))
                     }
-                    placeholder="Type your answer…"
+                    placeholder={t('exam.typeYourAnswer')}
                   />
                 )}
               </CardContent>
@@ -310,16 +314,16 @@ export default function TakeExamPage() {
         <div className="flex items-center justify-between">
           <p className="text-sm text-muted-foreground">
             {exam.examType === 'MULTIPLE_CHOICE'
-              ? `${Object.keys(selected).length} / ${exam.questions.length} answered`
+              ? `${Object.keys(selected).length} / ${exam.questions.length} ${t('exam.answered')}`
               : `${
                   Object.values(textAnswers).filter((v) => v.trim().length > 0).length
-                } / ${exam.questions.length} answered`}
+                } / ${exam.questions.length} ${t('exam.answered')}`}
           </p>
           <Button
             onClick={() => void submit()}
             disabled={submitting || !allAnswered}
           >
-            {submitting ? 'Submitting…' : 'Submit exam'}
+            {submitting ? t('common.submitting') : t('exam.submitExam')}
           </Button>
         </div>
       </div>

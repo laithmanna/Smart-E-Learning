@@ -17,6 +17,7 @@ import {
   YAxis,
 } from 'recharts';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { useT } from '@/i18n/provider';
 import { api } from '@/lib/api';
 import { ReportActions } from '../_report-actions';
 
@@ -48,6 +49,7 @@ const COLORS = ['#22c55e', '#ef4444', '#94a3b8'];
 export default function AttendanceReportPage() {
   const params = useParams<{ id: string }>();
   const courseId = params?.id;
+  const t = useT();
   const [report, setReport] = useState<AttendanceReport | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -65,21 +67,21 @@ export default function AttendanceReportPage() {
           href={`/courses/${courseId}/reports`}
           className="text-sm text-muted-foreground hover:underline"
         >
-          ← Back to reports
+          {t('common.backToReports')}
         </Link>
         <p className="text-destructive">{error}</p>
       </div>
     );
   }
-  if (!report) return <p className="text-muted-foreground">Loading…</p>;
+  if (!report) return <p className="text-muted-foreground">{t('common.loading')}</p>;
 
   const totalPresent = report.perStudent.reduce((a, s) => a + s.present, 0);
   const totalAbsent = report.perStudent.reduce((a, s) => a + s.absent, 0);
   const totalUnmarked = report.perStudent.reduce((a, s) => a + s.unmarked, 0);
   const overallPie = [
-    { name: 'Present', value: totalPresent },
-    { name: 'Absent', value: totalAbsent },
-    { name: 'Unmarked', value: totalUnmarked },
+    { name: t('reports.presentLabel'), value: totalPresent },
+    { name: t('reports.absentLabel'), value: totalAbsent },
+    { name: t('reports.unmarked'), value: totalUnmarked },
   ];
 
   const studentBars = report.perStudent.map((s) => ({
@@ -102,7 +104,7 @@ export default function AttendanceReportPage() {
           href={`/courses/${courseId}/reports`}
           className="text-sm text-muted-foreground hover:underline"
         >
-          ← Back to reports
+          {t('common.backToReports')}
         </Link>
         <ReportActions
           excelPath={`/courses/${courseId}/attendance/report.xlsx`}
@@ -111,21 +113,21 @@ export default function AttendanceReportPage() {
       </div>
 
       <div>
-        <p className="text-xs uppercase text-muted-foreground">Attendance report</p>
+        <p className="text-xs uppercase text-muted-foreground">{t('reports.attendance')}</p>
         <h1 className="text-2xl font-bold">{report.course.name}</h1>
         <p className="text-sm text-muted-foreground">
-          {report.perStudent.length} students · {report.perClass.length} classes
+          {report.perStudent.length} {t('reports.studentsKpi').toLowerCase()} · {report.perClass.length} {t('courses.classes')}
         </p>
       </div>
 
       <div className="grid gap-6 lg:grid-cols-2">
         <Card>
           <CardHeader>
-            <CardTitle>Overall</CardTitle>
+            <CardTitle>{t('reports.overall')}</CardTitle>
           </CardHeader>
           <CardContent className="h-72">
             {overallPie.every((p) => p.value === 0) ? (
-              <p className="text-sm text-muted-foreground">No attendance yet.</p>
+              <p className="text-sm text-muted-foreground">{t('reports.noAttendance')}</p>
             ) : (
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
@@ -152,7 +154,7 @@ export default function AttendanceReportPage() {
 
         <Card>
           <CardHeader>
-            <CardTitle>Per class</CardTitle>
+            <CardTitle>{t('reports.perClass')}</CardTitle>
           </CardHeader>
           <CardContent className="h-72">
             <ResponsiveContainer width="100%" height="100%">
@@ -162,8 +164,8 @@ export default function AttendanceReportPage() {
                 <YAxis />
                 <Tooltip />
                 <Legend />
-                <Bar dataKey="present" stackId="a" fill="#22c55e" name="Present" />
-                <Bar dataKey="absent" stackId="a" fill="#ef4444" name="Absent" />
+                <Bar dataKey="present" stackId="a" fill="#22c55e" name={t('reports.presentLabel')} />
+                <Bar dataKey="absent" stackId="a" fill="#ef4444" name={t('reports.absentLabel')} />
               </BarChart>
             </ResponsiveContainer>
           </CardContent>
@@ -172,7 +174,7 @@ export default function AttendanceReportPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Per student</CardTitle>
+          <CardTitle>{t('reports.perStudent')}</CardTitle>
         </CardHeader>
         <CardContent className="h-96">
           <ResponsiveContainer width="100%" height="100%">
@@ -182,8 +184,8 @@ export default function AttendanceReportPage() {
               <YAxis />
               <Tooltip />
               <Legend />
-              <Bar dataKey="present" stackId="a" fill="#22c55e" name="Present" />
-              <Bar dataKey="absent" stackId="a" fill="#ef4444" name="Absent" />
+              <Bar dataKey="present" stackId="a" fill="#22c55e" name={t('reports.presentLabel')} />
+              <Bar dataKey="absent" stackId="a" fill="#ef4444" name={t('reports.absentLabel')} />
             </BarChart>
           </ResponsiveContainer>
         </CardContent>
@@ -191,18 +193,18 @@ export default function AttendanceReportPage() {
 
       <Card className="overflow-hidden">
         <CardHeader>
-          <CardTitle>Detail</CardTitle>
+          <CardTitle>{t('reports.detail')}</CardTitle>
         </CardHeader>
         <table className="w-full text-sm">
           <thead className="bg-muted/50 text-left text-xs uppercase text-muted-foreground">
             <tr>
-              <th className="p-3">Student</th>
-              <th className="p-3">Email</th>
-              <th className="p-3">Present</th>
-              <th className="p-3">Absent</th>
-              <th className="p-3">Unmarked</th>
-              <th className="p-3">Total</th>
-              <th className="p-3">%</th>
+              <th className="p-3">{t('reports.student')}</th>
+              <th className="p-3">{t('common.email')}</th>
+              <th className="p-3">{t('reports.presentLabel')}</th>
+              <th className="p-3">{t('reports.absentLabel')}</th>
+              <th className="p-3">{t('reports.unmarked')}</th>
+              <th className="p-3">{t('reports.total')}</th>
+              <th className="p-3">{t('reports.pct')}</th>
             </tr>
           </thead>
           <tbody className="divide-y">

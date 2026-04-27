@@ -6,6 +6,7 @@ import { Dialog } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select } from '@/components/ui/select';
+import { useT } from '@/i18n/provider';
 import { api } from '@/lib/api';
 import type { Evaluation, QuestionTemplate } from '@/lib/types';
 
@@ -19,6 +20,7 @@ interface Props {
 }
 
 export function CreateEvaluationDialog({ open, courseId, onClose, onCreated }: Props) {
+  const t = useT();
   const [name, setName] = useState('');
   const [source, setSource] = useState<Source>('blank');
   const [templates, setTemplates] = useState<QuestionTemplate[]>([]);
@@ -75,7 +77,7 @@ export function CreateEvaluationDialog({ open, courseId, onClose, onCreated }: P
     }
   }
 
-  const selectedTemplate = templates.find((t) => t.id === templateId);
+  const selectedTemplate = templates.find((tpl) => tpl.id === templateId);
 
   return (
     <Dialog
@@ -86,23 +88,23 @@ export function CreateEvaluationDialog({ open, courseId, onClose, onCreated }: P
           onClose();
         }
       }}
-      title="New evaluation"
-      description="Start blank or copy questions from one of your templates."
+      title={t('evaluation.newEvaluation').replace('+ ', '')}
+      description={t('evaluation.newDescription')}
     >
       <form onSubmit={onSubmit} className="space-y-4">
         <div className="space-y-2">
-          <Label htmlFor="evalName">Name *</Label>
+          <Label htmlFor="evalName">{t('evaluation.nameLabel')} *</Label>
           <Input
             id="evalName"
             value={name}
             onChange={(e) => setName(e.target.value)}
             required
-            placeholder="e.g. End-of-course feedback"
+            placeholder={t('evaluation.namePlaceholder')}
           />
         </div>
 
         <div className="space-y-2">
-          <Label>Source</Label>
+          <Label>{t('evaluation.source')}</Label>
           <div className="grid grid-cols-2 gap-2">
             <button
               type="button"
@@ -114,9 +116,9 @@ export function CreateEvaluationDialog({ open, courseId, onClose, onCreated }: P
                   : 'hover:border-primary/50')
               }
             >
-              <p className="font-medium">Blank</p>
+              <p className="font-medium">{t('evaluation.sourceBlank')}</p>
               <p className="text-xs text-muted-foreground">
-                Start with no questions, add them yourself.
+                {t('evaluation.sourceBlankDesc')}
               </p>
             </button>
             <button
@@ -130,11 +132,11 @@ export function CreateEvaluationDialog({ open, courseId, onClose, onCreated }: P
                   : 'hover:border-primary/50')
               }
             >
-              <p className="font-medium">From template</p>
+              <p className="font-medium">{t('evaluation.sourceTemplate')}</p>
               <p className="text-xs text-muted-foreground">
                 {templates.length === 0
-                  ? 'No templates yet — create one first.'
-                  : 'Copy questions from a saved template.'}
+                  ? t('evaluation.sourceTemplateEmpty')
+                  : t('evaluation.sourceTemplateDesc')}
               </p>
             </button>
           </div>
@@ -142,16 +144,16 @@ export function CreateEvaluationDialog({ open, courseId, onClose, onCreated }: P
 
         {source === 'template' && templates.length > 0 && (
           <div className="space-y-2">
-            <Label htmlFor="tplPick">Template *</Label>
+            <Label htmlFor="tplPick">{t('evaluation.template')} *</Label>
             <Select
               id="tplPick"
               value={templateId}
               onChange={(e) => setTemplateId(e.target.value)}
               required
             >
-              {templates.map((t) => (
-                <option key={t.id} value={t.id}>
-                  {t.title} ({t._count?.questions ?? 0} questions)
+              {templates.map((tpl) => (
+                <option key={tpl.id} value={tpl.id}>
+                  {tpl.title} ({tpl._count?.questions ?? 0} {t('template.questions')})
                 </option>
               ))}
             </Select>
@@ -179,10 +181,10 @@ export function CreateEvaluationDialog({ open, courseId, onClose, onCreated }: P
             }}
             disabled={submitting}
           >
-            Cancel
+            {t('common.cancel')}
           </Button>
           <Button type="submit" disabled={submitting}>
-            {submitting ? 'Creating…' : 'Create evaluation'}
+            {submitting ? t('common.creating') : t('evaluation.newEvaluation').replace('+ ', '')}
           </Button>
         </div>
       </form>

@@ -14,6 +14,7 @@ import {
   YAxis,
 } from 'recharts';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { useT } from '@/i18n/provider';
 import { api } from '@/lib/api';
 import { ReportActions } from '../_report-actions';
 
@@ -44,6 +45,7 @@ interface ExamsReport {
 export default function ExamsReportPage() {
   const params = useParams<{ id: string }>();
   const courseId = params?.id;
+  const t = useT();
   const [report, setReport] = useState<ExamsReport | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -61,17 +63,17 @@ export default function ExamsReportPage() {
           href={`/courses/${courseId}/reports`}
           className="text-sm text-muted-foreground hover:underline"
         >
-          ← Back to reports
+          {t('common.backToReports')}
         </Link>
         <p className="text-destructive">{error}</p>
       </div>
     );
   }
-  if (!report) return <p className="text-muted-foreground">Loading…</p>;
+  if (!report) return <p className="text-muted-foreground">{t('common.loading')}</p>;
 
   const examChart = report.exams.map((e) => ({
     name: e.examName.length > 18 ? e.examName.slice(0, 16) + '…' : e.examName,
-    'Avg %': e.avgPct,
+    [t('reports.avgPct')]: e.avgPct,
   }));
 
   return (
@@ -81,7 +83,7 @@ export default function ExamsReportPage() {
           href={`/courses/${courseId}/reports`}
           className="text-sm text-muted-foreground hover:underline"
         >
-          ← Back to reports
+          {t('common.backToReports')}
         </Link>
         <ReportActions
           excelPath={`/courses/${courseId}/reports/exams.xlsx`}
@@ -90,20 +92,20 @@ export default function ExamsReportPage() {
       </div>
 
       <div>
-        <p className="text-xs uppercase text-muted-foreground">Exams report</p>
+        <p className="text-xs uppercase text-muted-foreground">{t('reports.examsReport')}</p>
         <h1 className="text-2xl font-bold">{report.course.name}</h1>
         <p className="text-sm text-muted-foreground">
-          {report.exams.length} exam{report.exams.length === 1 ? '' : 's'}
+          {report.exams.length} {t('courses.exams')}
         </p>
       </div>
 
       {report.exams.length === 0 ? (
-        <p className="text-sm text-muted-foreground">No exams created yet.</p>
+        <p className="text-sm text-muted-foreground">{t('exam.noExams')}</p>
       ) : (
         <>
           <Card>
             <CardHeader>
-              <CardTitle>Average score % per exam</CardTitle>
+              <CardTitle>{t('reports.avgScorePerExam')}</CardTitle>
             </CardHeader>
             <CardContent className="h-72">
               <ResponsiveContainer width="100%" height="100%">
@@ -113,7 +115,7 @@ export default function ExamsReportPage() {
                   <YAxis domain={[0, 100]} unit="%" />
                   <Tooltip />
                   <Legend />
-                  <Bar dataKey="Avg %" fill="#3b82f6" />
+                  <Bar dataKey={t('reports.avgPct')} fill="#3b82f6" />
                 </BarChart>
               </ResponsiveContainer>
             </CardContent>
@@ -139,22 +141,22 @@ export default function ExamsReportPage() {
                 <CardHeader>
                   <CardTitle>{e.examName}</CardTitle>
                   <p className="text-sm text-muted-foreground">
-                    {e.examType === 'MULTIPLE_CHOICE' ? 'MCQ' : 'Free text'} ·{' '}
-                    {new Date(e.examDate).toISOString().slice(0, 10)} · {e.totalMarks} marks
+                    {e.examType === 'MULTIPLE_CHOICE' ? t('exam.mcqShort') : t('exam.freeTextShort')} ·{' '}
+                    {new Date(e.examDate).toISOString().slice(0, 10)} · {e.totalMarks}
                   </p>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-                    <Stat label="Submissions" value={e.submissionCount} />
-                    <Stat label="Avg" value={`${e.avgScore} (${e.avgPct}%)`} />
-                    <Stat label="Max" value={e.maxScore} />
-                    <Stat label="Min" value={e.minScore} />
+                    <Stat label={t('reports.submissions')} value={e.submissionCount} />
+                    <Stat label={t('reports.avg')} value={`${e.avgScore} (${e.avgPct}%)`} />
+                    <Stat label={t('reports.max')} value={e.maxScore} />
+                    <Stat label={t('reports.min')} value={e.minScore} />
                   </div>
 
                   {e.results.length > 0 && (
                     <div className="grid gap-4 lg:grid-cols-2">
                       <div className="h-56">
-                        <p className="mb-2 text-sm font-medium">Distribution</p>
+                        <p className="mb-2 text-sm font-medium">{t('reports.distribution')}</p>
                         <ResponsiveContainer width="100%" height="100%">
                           <BarChart data={distData}>
                             <CartesianGrid strokeDasharray="3 3" />
@@ -169,9 +171,9 @@ export default function ExamsReportPage() {
                         <table className="w-full text-xs">
                           <thead className="bg-muted/50 text-left text-xs uppercase text-muted-foreground">
                             <tr>
-                              <th className="p-2">Student</th>
-                              <th className="p-2">Score</th>
-                              <th className="p-2">%</th>
+                              <th className="p-2">{t('reports.student')}</th>
+                              <th className="p-2">{t('reports.score')}</th>
+                              <th className="p-2">{t('reports.pct')}</th>
                             </tr>
                           </thead>
                           <tbody className="divide-y">

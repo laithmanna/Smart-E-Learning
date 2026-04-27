@@ -6,6 +6,7 @@ import { Dialog } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { useT } from '@/i18n/provider';
 import { api } from '@/lib/api';
 import { cn } from '@/lib/utils';
 import type { ExamType, Question } from '@/lib/types';
@@ -27,6 +28,7 @@ export function QuestionDialog({
   onClose,
   onSaved,
 }: Props) {
+  const t = useT();
   const isEdit = !!question;
   const [questionText, setQuestionText] = useState('');
   const [options, setOptions] = useState<string[]>(['', '', '', '']);
@@ -100,31 +102,31 @@ export function QuestionDialog({
     <Dialog
       open={open}
       onClose={() => !submitting && onClose()}
-      title={isEdit ? 'Edit question' : 'Add question'}
+      title={isEdit ? t('exam.editQuestion') : t('exam.addQuestionTitle')}
       description={
         examType === 'MULTIPLE_CHOICE'
-          ? 'Multiple choice — provide options + correct answer.'
-          : 'Free text — students will type their answer.'
+          ? t('exam.mcDescription')
+          : t('exam.ftDescription')
       }
     >
       <form onSubmit={onSubmit} className="space-y-4">
         <div className="space-y-2">
-          <Label htmlFor="questionText">Question *</Label>
+          <Label htmlFor="questionText">{t('exam.question')} *</Label>
           <Textarea
             id="questionText"
             value={questionText}
             onChange={(e) => setQuestionText(e.target.value)}
             rows={3}
             required
-            placeholder="Type the question…"
+            placeholder={t('exam.typeQuestion')}
           />
         </div>
 
         {examType === 'MULTIPLE_CHOICE' && (
           <div className="space-y-3">
-            <Label>Options</Label>
+            <Label>{t('exam.options')}</Label>
             <p className="text-xs text-muted-foreground">
-              Tick the radio next to the correct answer. At least 2 options required.
+              {t('exam.optionsHelp')}
             </p>
             {options.map((opt, i) => {
               const num = i + 1;
@@ -167,10 +169,10 @@ export function QuestionDialog({
 
         <div className="flex justify-end gap-2 pt-2">
           <Button type="button" variant="outline" onClick={onClose} disabled={submitting}>
-            Cancel
+            {t('common.cancel')}
           </Button>
           <Button type="submit" disabled={submitting}>
-            {submitting ? 'Saving…' : isEdit ? 'Save changes' : 'Add question'}
+            {submitting ? t('common.saving') : isEdit ? t('common.saveChanges') : t('exam.addQuestionTitle')}
           </Button>
         </div>
       </form>

@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Dialog } from '@/components/ui/dialog';
 import { useAuth } from '@/hooks/use-auth';
+import { useT } from '@/i18n/provider';
 import { api } from '@/lib/api';
 import type { ExamDetail, ExamResultRow, Question, Role } from '@/lib/types';
 import { QuestionDialog } from './_question-dialog';
@@ -19,6 +20,7 @@ export default function ExamDetailPage() {
   const examId = params?.examId;
   const router = useRouter();
   const { user } = useAuth();
+  const t = useT();
 
   const [exam, setExam] = useState<ExamDetail | null>(null);
   const [results, setResults] = useState<ExamResultRow[] | null>(null);
@@ -76,7 +78,7 @@ export default function ExamDetailPage() {
           href={`/courses/${courseId}`}
           className="text-sm text-muted-foreground hover:underline"
         >
-          ← Back to course
+          {t('common.backToCourse')}
         </Link>
         <p className="text-destructive">{error}</p>
       </div>
@@ -84,7 +86,7 @@ export default function ExamDetailPage() {
   }
 
   if (!exam) {
-    return <p className="text-muted-foreground">Loading…</p>;
+    return <p className="text-muted-foreground">{t('common.loading')}</p>;
   }
 
   return (
@@ -94,7 +96,7 @@ export default function ExamDetailPage() {
           href={`/courses/${courseId}`}
           className="text-sm text-muted-foreground hover:underline"
         >
-          ← Back to {exam.course.courseName}
+          {t('common.backTo')} {exam.course.courseName}
         </Link>
       </div>
 
@@ -103,17 +105,19 @@ export default function ExamDetailPage() {
           <div className="flex items-center gap-3">
             <h1 className="text-2xl font-bold">{exam.examName}</h1>
             <span className="rounded-full bg-secondary px-2 py-0.5 text-xs">
-              {exam.examType === 'MULTIPLE_CHOICE' ? 'MCQ · Auto-graded' : 'Free text · Manual'}
+              {exam.examType === 'MULTIPLE_CHOICE'
+                ? `${t('exam.mcqShort')} · ${t('exam.autoGraded').replace('.', '')}`
+                : t('exam.freeTextShort')}
             </span>
           </div>
           <p className="text-sm text-muted-foreground">
-            Date: {fmt(exam.examDate)} · Total marks: {exam.totalMarks}
+            {t('common.date')}: {fmt(exam.examDate)} · {t('exam.totalMarks')}: {exam.totalMarks}
           </p>
         </div>
         {canManage && (
           <div className="flex gap-2">
             <Button size="sm" onClick={() => setAddOpen(true)}>
-              + Add question
+              {t('exam.addQuestion')}
             </Button>
             <Button
               size="sm"
@@ -121,7 +125,7 @@ export default function ExamDetailPage() {
               onClick={() => setConfirmDeleteExam(true)}
               disabled={deleteExamBusy}
             >
-              Delete exam
+              {t('exam.deleteExam')}
             </Button>
           </div>
         )}
@@ -129,12 +133,12 @@ export default function ExamDetailPage() {
 
       <div>
         <h2 className="mb-3 text-lg font-semibold">
-          Questions ({exam.questions.length})
+          {t('exam.questions')} ({exam.questions.length})
         </h2>
         {exam.questions.length === 0 ? (
           <Card>
             <CardContent className="py-12 text-center text-sm text-muted-foreground">
-              No questions yet.
+              {t('exam.noQuestions')}
               {canManage && (
                 <>
                   {' '}
@@ -142,7 +146,7 @@ export default function ExamDetailPage() {
                     onClick={() => setAddOpen(true)}
                     className="text-primary underline"
                   >
-                    Add the first one.
+                    {t('exam.addFirst')}
                   </button>
                 </>
               )}
@@ -156,7 +160,7 @@ export default function ExamDetailPage() {
                   <div className="flex items-start justify-between gap-4">
                     <div className="flex-1 space-y-2">
                       <p className="text-xs uppercase text-muted-foreground">
-                        Question {i + 1}
+                        {t('exam.question')} {i + 1}
                       </p>
                       <p className="font-medium">{q.questionText}</p>
                       {exam.examType === 'MULTIPLE_CHOICE' && (
@@ -177,7 +181,7 @@ export default function ExamDetailPage() {
                                 <span className="mr-2 font-medium">{num}.</span>
                                 {opt}
                                 {correct && (
-                                  <span className="ml-2 text-xs">✓ correct</span>
+                                  <span className="ml-2 text-xs">{t('exam.correctAnswer')}</span>
                                 )}
                               </li>
                             );
@@ -188,14 +192,14 @@ export default function ExamDetailPage() {
                     {canManage && (
                       <div className="flex gap-1">
                         <Button size="sm" variant="outline" onClick={() => setEditing(q)}>
-                          Edit
+                          {t('common.edit')}
                         </Button>
                         <Button
                           size="sm"
                           variant="destructive"
                           onClick={() => setDeleting(q)}
                         >
-                          Delete
+                          {t('common.delete')}
                         </Button>
                       </div>
                     )}
@@ -209,15 +213,15 @@ export default function ExamDetailPage() {
 
       {results && results.length > 0 && (
         <div>
-          <h2 className="mb-3 text-lg font-semibold">Results ({results.length})</h2>
+          <h2 className="mb-3 text-lg font-semibold">{t('exam.examResults')} ({results.length})</h2>
           <Card className="overflow-hidden">
             <table className="w-full text-sm">
               <thead className="bg-muted/50 text-left text-xs uppercase text-muted-foreground">
                 <tr>
-                  <th className="p-3">Student</th>
-                  <th className="p-3">Email</th>
-                  <th className="p-3">Marks</th>
-                  <th className="p-3">%</th>
+                  <th className="p-3">{t('reports.student')}</th>
+                  <th className="p-3">{t('common.email')}</th>
+                  <th className="p-3">{t('exam.totalMarks')}</th>
+                  <th className="p-3">{t('reports.pct')}</th>
                 </tr>
               </thead>
               <tbody className="divide-y">
@@ -264,17 +268,17 @@ export default function ExamDetailPage() {
       <Dialog
         open={!!deleting}
         onClose={() => !deleteBusy && setDeleting(null)}
-        title="Delete question?"
+        title={t('exam.deleteQuestion')}
         description={
           deleting ? `"${deleting.questionText.slice(0, 80)}…"` : ''
         }
       >
         <div className="flex justify-end gap-2">
           <Button variant="outline" onClick={() => setDeleting(null)} disabled={deleteBusy}>
-            Cancel
+            {t('common.cancel')}
           </Button>
           <Button variant="destructive" onClick={() => void deleteQuestion()} disabled={deleteBusy}>
-            {deleteBusy ? 'Deleting…' : 'Delete'}
+            {deleteBusy ? t('common.deleting') : t('common.delete')}
           </Button>
         </div>
       </Dialog>
@@ -282,8 +286,8 @@ export default function ExamDetailPage() {
       <Dialog
         open={confirmDeleteExam}
         onClose={() => !deleteExamBusy && setConfirmDeleteExam(false)}
-        title="Delete exam?"
-        description={`This permanently deletes "${exam.examName}" and all its questions, answers, and results.`}
+        title={t('exam.deleteExamConfirm')}
+        description={t('exam.deleteExamDesc').replace('{name}', exam.examName)}
       >
         <div className="flex justify-end gap-2">
           <Button
@@ -291,14 +295,14 @@ export default function ExamDetailPage() {
             onClick={() => setConfirmDeleteExam(false)}
             disabled={deleteExamBusy}
           >
-            Cancel
+            {t('common.cancel')}
           </Button>
           <Button
             variant="destructive"
             onClick={() => void deleteExam()}
             disabled={deleteExamBusy}
           >
-            {deleteExamBusy ? 'Deleting…' : 'Delete exam'}
+            {deleteExamBusy ? t('common.deleting') : t('exam.deleteExam')}
           </Button>
         </div>
       </Dialog>

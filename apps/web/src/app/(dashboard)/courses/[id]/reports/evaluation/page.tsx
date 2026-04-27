@@ -15,6 +15,7 @@ import {
 } from 'recharts';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select } from '@/components/ui/select';
+import { useT } from '@/i18n/provider';
 import { api } from '@/lib/api';
 import type { Evaluation, EvaluationReport as EvaluationReportT } from '@/lib/types';
 import { ReportActions } from '../_report-actions';
@@ -31,6 +32,7 @@ const RATING_COLORS: Record<string, string> = {
 export default function EvaluationReportPage() {
   const params = useParams<{ id: string }>();
   const courseId = params?.id;
+  const t = useT();
   const [evaluations, setEvaluations] = useState<Evaluation[]>([]);
   const [selectedId, setSelectedId] = useState<string>('');
   const [report, setReport] = useState<EvaluationReportT | null>(null);
@@ -66,7 +68,7 @@ export default function EvaluationReportPage() {
           href={`/courses/${courseId}/reports`}
           className="text-sm text-muted-foreground hover:underline"
         >
-          ← Back to reports
+          {t('common.backToReports')}
         </Link>
         <p className="text-destructive">{error}</p>
       </div>
@@ -80,7 +82,7 @@ export default function EvaluationReportPage() {
           href={`/courses/${courseId}/reports`}
           className="text-sm text-muted-foreground hover:underline"
         >
-          ← Back to reports
+          {t('common.backToReports')}
         </Link>
         <ReportActions
           excelPath={selectedId ? `/evaluations/${selectedId}/report.xlsx` : undefined}
@@ -89,9 +91,9 @@ export default function EvaluationReportPage() {
       </div>
 
       <div>
-        <p className="text-xs uppercase text-muted-foreground">Evaluation report</p>
+        <p className="text-xs uppercase text-muted-foreground">{t('reports.evaluation')}</p>
         <h1 className="text-2xl font-bold">
-          {report?.name ?? 'Pick an evaluation'}
+          {report?.name ?? t('reports.pickEvaluation')}
         </h1>
       </div>
 
@@ -102,11 +104,11 @@ export default function EvaluationReportPage() {
           disabled={evaluations.length === 0}
         >
           {evaluations.length === 0 ? (
-            <option value="">No evaluations on this course</option>
+            <option value="">{t('reports.noEvaluations')}</option>
           ) : (
             evaluations.map((ev) => (
               <option key={ev.id} value={ev.id}>
-                {ev.name} {ev.isPublished ? '· published' : '· draft'}
+                {ev.name} {ev.isPublished ? `· ${t('evaluation.publishedShort').toLowerCase()}` : `· ${t('evaluation.draftShort').toLowerCase()}`}
               </option>
             ))
           )}
@@ -114,7 +116,7 @@ export default function EvaluationReportPage() {
       </div>
 
       {!report && evaluations.length > 0 && (
-        <p className="text-sm text-muted-foreground">Loading…</p>
+        <p className="text-sm text-muted-foreground">{t('common.loading')}</p>
       )}
 
       {report && (
@@ -122,11 +124,11 @@ export default function EvaluationReportPage() {
           <Card>
             <CardContent className="pt-6 text-sm">
               <p>
-                <span className="text-muted-foreground">Questions:</span>{' '}
+                <span className="text-muted-foreground">{t('reports.questionsLabel')}:</span>{' '}
                 {report.questions.length}
               </p>
               <p>
-                <span className="text-muted-foreground">Total responses:</span>{' '}
+                <span className="text-muted-foreground">{t('reports.totalResponses')}:</span>{' '}
                 {totalResponses}
               </p>
             </CardContent>
@@ -134,7 +136,7 @@ export default function EvaluationReportPage() {
 
           {report.questions.length === 0 ? (
             <p className="text-sm text-muted-foreground">
-              No questions in this evaluation yet.
+              {t('reports.noEvalQuestions')}
             </p>
           ) : (
             report.questions.map((q, i) => {
@@ -159,14 +161,13 @@ export default function EvaluationReportPage() {
                       Q{i + 1}. {q.question}
                     </CardTitle>
                     <p className="text-sm text-muted-foreground">
-                      {q.responses.length} response
-                      {q.responses.length === 1 ? '' : 's'}
+                      {q.responses.length} {t('reports.responses').toLowerCase()}
                     </p>
                   </CardHeader>
                   <CardContent className="grid gap-4 lg:grid-cols-2">
                     <div className="h-56">
                       {q.responses.length === 0 ? (
-                        <p className="text-sm text-muted-foreground">No responses yet.</p>
+                        <p className="text-sm text-muted-foreground">{t('reports.noResponsesEval')}</p>
                       ) : (
                         <ResponsiveContainer width="100%" height="100%">
                           <BarChart data={data}>
@@ -175,7 +176,7 @@ export default function EvaluationReportPage() {
                             <YAxis allowDecimals={false} />
                             <Tooltip />
                             <Legend />
-                            <Bar dataKey="count" name="Responses">
+                            <Bar dataKey="count" name={t('reports.responses')}>
                               {data.map((entry, idx) => (
                                 <rect
                                   key={idx}
@@ -193,8 +194,8 @@ export default function EvaluationReportPage() {
                         <table className="w-full text-xs">
                           <thead className="bg-muted/50 text-left text-xs uppercase text-muted-foreground">
                             <tr>
-                              <th className="p-2">Student</th>
-                              <th className="p-2">Rating</th>
+                              <th className="p-2">{t('reports.student')}</th>
+                              <th className="p-2">{t('reports.rating')}</th>
                             </tr>
                           </thead>
                           <tbody className="divide-y">

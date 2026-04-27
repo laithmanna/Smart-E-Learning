@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Dialog } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { useT } from '@/i18n/provider';
 import { api } from '@/lib/api';
 import type { Admin } from '@/lib/types';
 
@@ -15,6 +16,7 @@ interface Props {
 }
 
 export function EditAdminDialog({ admin, onClose, onUpdated }: Props) {
+  const t = useT();
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -62,12 +64,12 @@ export function EditAdminDialog({ admin, onClose, onUpdated }: Props) {
     <Dialog
       open={!!admin}
       onClose={() => !submitting && onClose()}
-      title="Edit admin"
+      title={t('userMgmt.adminEdit')}
       description={admin.user.email}
     >
       <form onSubmit={onSubmit} className="space-y-4">
         <div className="space-y-2">
-          <Label htmlFor="edit-name">Full name *</Label>
+          <Label htmlFor="edit-name">{t('userMgmt.fullNameLabel')} *</Label>
           <Input
             id="edit-name"
             value={name}
@@ -76,7 +78,7 @@ export function EditAdminDialog({ admin, onClose, onUpdated }: Props) {
           />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="edit-phone">Phone</Label>
+          <Label htmlFor="edit-phone">{t('common.phone')}</Label>
           <Input id="edit-phone" value={phone} onChange={(e) => setPhone(e.target.value)} />
         </div>
         {error && (
@@ -86,10 +88,10 @@ export function EditAdminDialog({ admin, onClose, onUpdated }: Props) {
         )}
         <div className="flex justify-end gap-2 pt-2">
           <Button type="button" variant="outline" onClick={onClose} disabled={submitting}>
-            Cancel
+            {t('common.cancel')}
           </Button>
           <Button type="submit" disabled={submitting}>
-            {submitting ? 'Saving…' : 'Save changes'}
+            {submitting ? t('common.saving') : t('common.saveChanges')}
           </Button>
         </div>
       </form>

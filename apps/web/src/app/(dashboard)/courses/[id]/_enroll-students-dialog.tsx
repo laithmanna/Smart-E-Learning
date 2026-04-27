@@ -6,6 +6,7 @@ import { Dialog } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select } from '@/components/ui/select';
+import { useT } from '@/i18n/provider';
 import { api } from '@/lib/api';
 import { cn } from '@/lib/utils';
 import type { Student } from '@/lib/types';
@@ -27,6 +28,7 @@ export function EnrollStudentsDialog({
   onClose,
   onSuccess,
 }: Props) {
+  const t = useT();
   const [mode, setMode] = useState<Mode>('existing');
 
   // ----- Existing student mode -----
@@ -153,16 +155,16 @@ export function EnrollStudentsDialog({
     <Dialog
       open={open}
       onClose={close}
-      title="Enroll students"
-      description="Pick existing students or create a new one — they'll be added to this course."
+      title={t('enroll.title')}
+      description={t('enroll.description')}
       className="max-w-2xl"
     >
       <div className="mb-4 flex gap-1 border-b">
         <TabBtn active={mode === 'existing'} onClick={() => setMode('existing')}>
-          Existing student
+          {t('enroll.existingTab')}
         </TabBtn>
         <TabBtn active={mode === 'new'} onClick={() => setMode('new')}>
-          New student
+          {t('enroll.newTab')}
         </TabBtn>
       </div>
 
@@ -175,19 +177,19 @@ export function EnrollStudentsDialog({
       {mode === 'existing' && (
         <div className="space-y-4">
           <Input
-            placeholder="Search by name, email, or social ID…"
+            placeholder={t('enroll.searchPlaceholder')}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
           <div className="max-h-72 overflow-y-auto rounded-md border">
             {!candidates && (
-              <p className="p-4 text-sm text-muted-foreground">Loading…</p>
+              <p className="p-4 text-sm text-muted-foreground">{t('common.loading')}</p>
             )}
             {candidates && candidates.length === 0 && (
               <p className="p-4 text-sm text-muted-foreground">
                 {allStudents && allStudents.length > 0
-                  ? 'All students are already enrolled or no match.'
-                  : 'No students yet — switch to "New student" tab.'}
+                  ? t('enroll.allEnrolled')
+                  : t('enroll.noStudentsYet')}
               </p>
             )}
             {candidates &&
@@ -219,17 +221,17 @@ export function EnrollStudentsDialog({
           </div>
           <div className="flex items-center justify-between">
             <p className="text-xs text-muted-foreground">
-              {selected.size} selected
+              {t('enroll.selected').replace('{count}', String(selected.size))}
             </p>
             <div className="flex gap-2">
               <Button variant="outline" onClick={close} disabled={enrolling}>
-                Cancel
+                {t('common.cancel')}
               </Button>
               <Button
                 onClick={() => void enrollSelected()}
                 disabled={enrolling || selected.size === 0}
               >
-                {enrolling ? 'Enrolling…' : `Enroll ${selected.size}`}
+                {enrolling ? t('enroll.enrolling') : t('enroll.enrollSelected').replace('{count}', String(selected.size))}
               </Button>
             </div>
           </div>
@@ -239,11 +241,10 @@ export function EnrollStudentsDialog({
       {mode === 'new' && (
         <form onSubmit={createAndEnroll} className="space-y-4">
           <p className="rounded-md bg-muted p-3 text-xs text-muted-foreground">
-            We&apos;ll create a Student account and enroll them in this course in one step.
-            They can log in immediately with the password below.
+            {t('enroll.createAndEnrollNote')}
           </p>
           <div className="space-y-2">
-            <Label htmlFor="new-name">Full name *</Label>
+            <Label htmlFor="new-name">{t('userMgmt.fullNameLabel')} *</Label>
             <Input
               id="new-name"
               value={name}
@@ -252,7 +253,7 @@ export function EnrollStudentsDialog({
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="new-email">Email *</Label>
+            <Label htmlFor="new-email">{t('common.email')} *</Label>
             <Input
               id="new-email"
               type="email"
@@ -264,7 +265,7 @@ export function EnrollStudentsDialog({
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="new-phone">Phone</Label>
+              <Label htmlFor="new-phone">{t('common.phone')}</Label>
               <Input
                 id="new-phone"
                 value={phone}
@@ -272,7 +273,7 @@ export function EnrollStudentsDialog({
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="new-social">Social / National ID</Label>
+              <Label htmlFor="new-social">{t('common.socialId')}</Label>
               <Input
                 id="new-social"
                 value={socialId}
@@ -282,20 +283,20 @@ export function EnrollStudentsDialog({
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="new-gender">Gender</Label>
+              <Label htmlFor="new-gender">{t('common.gender')}</Label>
               <Select
                 id="new-gender"
                 value={gender}
                 onChange={(e) => setGender(e.target.value as typeof gender)}
               >
-                <option value="">— not set —</option>
-                <option value="MALE">Male</option>
-                <option value="FEMALE">Female</option>
-                <option value="OTHER">Other</option>
+                <option value="">{t('common.notSet')}</option>
+                <option value="MALE">{t('common.male')}</option>
+                <option value="FEMALE">{t('common.female')}</option>
+                <option value="OTHER">{t('common.other')}</option>
               </Select>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="new-password">Initial password *</Label>
+              <Label htmlFor="new-password">{t('userMgmt.initialPassword')} *</Label>
               <Input
                 id="new-password"
                 type="text"
@@ -308,10 +309,10 @@ export function EnrollStudentsDialog({
           </div>
           <div className="flex justify-end gap-2 pt-2">
             <Button type="button" variant="outline" onClick={close} disabled={creating}>
-              Cancel
+              {t('common.cancel')}
             </Button>
             <Button type="submit" disabled={creating}>
-              {creating ? 'Creating…' : 'Create & enroll'}
+              {creating ? t('common.creating') : t('enroll.createAndEnroll')}
             </Button>
           </div>
         </form>

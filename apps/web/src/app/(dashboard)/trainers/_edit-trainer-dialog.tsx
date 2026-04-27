@@ -6,6 +6,7 @@ import { Dialog } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { useT } from '@/i18n/provider';
 import { api } from '@/lib/api';
 import type { Trainer } from '@/lib/types';
 import { uploadUrl } from '@/lib/utils';
@@ -17,6 +18,7 @@ interface Props {
 }
 
 export function EditTrainerDialog({ trainer, onClose, onUpdated }: Props) {
+  const t = useT();
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
   const [specialization, setSpecialization] = useState('');
@@ -100,12 +102,12 @@ export function EditTrainerDialog({ trainer, onClose, onUpdated }: Props) {
     <Dialog
       open={!!trainer}
       onClose={() => !submitting && !photoBusy && !cvBusy && onClose()}
-      title="Edit trainer"
+      title={t('userMgmt.trainerEdit')}
       description={trainer.user.email}
     >
       <form onSubmit={onSubmit} className="space-y-4">
         <div className="space-y-2">
-          <Label htmlFor="edit-name">Full name *</Label>
+          <Label htmlFor="edit-name">{t('userMgmt.fullNameLabel')} *</Label>
           <Input
             id="edit-name"
             value={name}
@@ -114,11 +116,11 @@ export function EditTrainerDialog({ trainer, onClose, onUpdated }: Props) {
           />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="edit-phone">Phone</Label>
+          <Label htmlFor="edit-phone">{t('common.phone')}</Label>
           <Input id="edit-phone" value={phone} onChange={(e) => setPhone(e.target.value)} />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="edit-spec">Specialization</Label>
+          <Label htmlFor="edit-spec">{t('userMgmt.specialization')}</Label>
           <Input
             id="edit-spec"
             value={specialization}
@@ -126,7 +128,7 @@ export function EditTrainerDialog({ trainer, onClose, onUpdated }: Props) {
           />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="edit-about">About</Label>
+          <Label htmlFor="edit-about">{t('userMgmt.about')}</Label>
           <Textarea
             id="edit-about"
             value={about}
@@ -143,18 +145,18 @@ export function EditTrainerDialog({ trainer, onClose, onUpdated }: Props) {
 
         <div className="flex justify-end gap-2 pt-2">
           <Button type="button" variant="outline" onClick={onClose} disabled={submitting}>
-            Close
+            {t('common.close')}
           </Button>
           <Button type="submit" disabled={submitting}>
-            {submitting ? 'Saving…' : 'Save changes'}
+            {submitting ? t('common.saving') : t('common.saveChanges')}
           </Button>
         </div>
       </form>
 
       <div className="mt-6 space-y-4 border-t pt-6">
         <div>
-          <h3 className="text-sm font-semibold">Photo</h3>
-          <p className="text-xs text-muted-foreground">PNG / JPEG / WebP, max 5 MB</p>
+          <h3 className="text-sm font-semibold">{t('userMgmt.photo')}</h3>
+          <p className="text-xs text-muted-foreground">{t('userMgmt.photoHelp')}</p>
         </div>
         <div className="flex items-center gap-4">
           {photoSrc ? (
@@ -166,7 +168,7 @@ export function EditTrainerDialog({ trainer, onClose, onUpdated }: Props) {
             />
           ) : (
             <div className="flex h-16 w-16 items-center justify-center rounded-md border border-dashed text-xs text-muted-foreground">
-              none
+              {t('userMgmt.photoNone')}
             </div>
           )}
           <Input
@@ -179,14 +181,14 @@ export function EditTrainerDialog({ trainer, onClose, onUpdated }: Props) {
               if (f) void uploadFile('photo', f);
             }}
           />
-          {photoBusy && <span className="text-xs text-muted-foreground">Uploading…</span>}
+          {photoBusy && <span className="text-xs text-muted-foreground">{t('common.uploading')}</span>}
         </div>
       </div>
 
       <div className="mt-4 space-y-4 border-t pt-6">
         <div>
-          <h3 className="text-sm font-semibold">CV</h3>
-          <p className="text-xs text-muted-foreground">PDF only, max 10 MB</p>
+          <h3 className="text-sm font-semibold">{t('userMgmt.cv')}</h3>
+          <p className="text-xs text-muted-foreground">{t('userMgmt.cvHelp')}</p>
         </div>
         <div className="flex items-center gap-4">
           {cvSrc ? (
@@ -196,10 +198,10 @@ export function EditTrainerDialog({ trainer, onClose, onUpdated }: Props) {
               rel="noreferrer"
               className="text-sm text-primary underline"
             >
-              View current CV
+              {t('userMgmt.viewCv')}
             </a>
           ) : (
-            <span className="text-sm text-muted-foreground">No CV uploaded</span>
+            <span className="text-sm text-muted-foreground">{t('userMgmt.noCv')}</span>
           )}
           <Input
             ref={cvInputRef}
@@ -211,7 +213,7 @@ export function EditTrainerDialog({ trainer, onClose, onUpdated }: Props) {
               if (f) void uploadFile('cv', f);
             }}
           />
-          {cvBusy && <span className="text-xs text-muted-foreground">Uploading…</span>}
+          {cvBusy && <span className="text-xs text-muted-foreground">{t('common.uploading')}</span>}
         </div>
       </div>
     </Dialog>

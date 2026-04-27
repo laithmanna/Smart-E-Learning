@@ -6,6 +6,7 @@ import { Dialog } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { useT } from '@/i18n/provider';
 import { api } from '@/lib/api';
 import type { Trainer } from '@/lib/types';
 
@@ -16,6 +17,7 @@ interface Props {
 }
 
 export function CreateTrainerDialog({ open, onClose, onCreated }: Props) {
+  const t = useT();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
@@ -70,16 +72,16 @@ export function CreateTrainerDialog({ open, onClose, onCreated }: Props) {
           onClose();
         }
       }}
-      title="New trainer"
-      description="You can upload photo & CV after creating."
+      title={t('userMgmt.trainerCreate')}
+      description={t('userMgmt.trainerCreateDesc')}
     >
       <form onSubmit={onSubmit} className="space-y-4">
         <div className="space-y-2">
-          <Label htmlFor="name">Full name *</Label>
+          <Label htmlFor="name">{t('userMgmt.fullNameLabel')} *</Label>
           <Input id="name" value={name} onChange={(e) => setName(e.target.value)} required />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="email">Email *</Label>
+          <Label htmlFor="email">{t('common.email')} *</Label>
           <Input
             id="email"
             type="email"
@@ -90,30 +92,30 @@ export function CreateTrainerDialog({ open, onClose, onCreated }: Props) {
           />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="phone">Phone</Label>
+          <Label htmlFor="phone">{t('common.phone')}</Label>
           <Input id="phone" value={phone} onChange={(e) => setPhone(e.target.value)} />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="specialization">Specialization</Label>
+          <Label htmlFor="specialization">{t('userMgmt.specialization')}</Label>
           <Input
             id="specialization"
             value={specialization}
             onChange={(e) => setSpecialization(e.target.value)}
-            placeholder="e.g. Cybersecurity, Data Science"
+            placeholder={t('userMgmt.specializationPlaceholder')}
           />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="about">About</Label>
+          <Label htmlFor="about">{t('userMgmt.about')}</Label>
           <Textarea
             id="about"
             value={about}
             onChange={(e) => setAbout(e.target.value)}
             rows={3}
-            placeholder="Short bio shown to students"
+            placeholder={t('userMgmt.aboutPlaceholder')}
           />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="password">Initial password *</Label>
+          <Label htmlFor="password">{t('userMgmt.initialPassword')} *</Label>
           <Input
             id="password"
             type="text"
@@ -123,7 +125,7 @@ export function CreateTrainerDialog({ open, onClose, onCreated }: Props) {
             minLength={6}
           />
           <p className="text-xs text-muted-foreground">
-            Trainer should change it on first login.
+            {t('userMgmt.initialPasswordHelp')}
           </p>
         </div>
         {error && (
@@ -141,10 +143,10 @@ export function CreateTrainerDialog({ open, onClose, onCreated }: Props) {
             }}
             disabled={submitting}
           >
-            Cancel
+            {t('common.cancel')}
           </Button>
           <Button type="submit" disabled={submitting}>
-            {submitting ? 'Creating…' : 'Create trainer'}
+            {submitting ? t('common.creating') : t('userMgmt.trainerCreating')}
           </Button>
         </div>
       </form>

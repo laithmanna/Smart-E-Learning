@@ -6,6 +6,7 @@ import { Card } from '@/components/ui/card';
 import { Dialog } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { useAuth } from '@/hooks/use-auth';
+import { useT } from '@/i18n/provider';
 import { api } from '@/lib/api';
 import type { Role, Trainer } from '@/lib/types';
 import { uploadUrl } from '@/lib/utils';
@@ -16,6 +17,7 @@ const ALLOWED: Role[] = ['SUPER_ADMIN', 'ADMIN'];
 
 export default function TrainersPage() {
   const { user } = useAuth();
+  const t = useT();
   const [list, setList] = useState<Trainer[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState('');
@@ -46,23 +48,23 @@ export default function TrainersPage() {
     const q = search.trim().toLowerCase();
     if (!q) return list;
     return list.filter(
-      (t) =>
-        t.name.toLowerCase().includes(q) ||
-        t.user.email.toLowerCase().includes(q) ||
-        (t.phone ?? '').toLowerCase().includes(q) ||
-        (t.specialization ?? '').toLowerCase().includes(q),
+      (tr) =>
+        tr.name.toLowerCase().includes(q) ||
+        tr.user.email.toLowerCase().includes(q) ||
+        (tr.phone ?? '').toLowerCase().includes(q) ||
+        (tr.specialization ?? '').toLowerCase().includes(q),
     );
   }, [list, search]);
 
-  async function toggleActive(t: Trainer) {
-    setBusyId(t.id);
-    const next = !t.user.isActive;
+  async function toggleActive(tr: Trainer) {
+    setBusyId(tr.id);
+    const next = !tr.user.isActive;
     try {
-      await api(`/users/${t.userId}/${next ? 'activate' : 'deactivate'}`, { method: 'PATCH' });
+      await api(`/users/${tr.userId}/${next ? 'activate' : 'deactivate'}`, { method: 'PATCH' });
       setList((prev) =>
         prev
           ? prev.map((x) =>
-              x.id === t.id ? { ...x, user: { ...x.user, isActive: next } } : x,
+              x.id === tr.id ? { ...x, user: { ...x.user, isActive: next } } : x,
             )
           : prev,
       );
@@ -73,13 +75,13 @@ export default function TrainersPage() {
     }
   }
 
-  async function resetPassword(t: Trainer) {
-    setBusyId(t.id);
+  async function resetPassword(tr: Trainer) {
+    setBusyId(tr.id);
     try {
-      const out = await api<{ tempPassword: string }>(`/users/${t.userId}/reset-password`, {
+      const out = await api<{ tempPassword: string }>(`/users/${tr.userId}/reset-password`, {
         method: 'POST',
       });
-      setResetTemp({ name: t.name, password: out.tempPassword });
+      setResetTemp({ name: tr.name, password: out.tempPassword });
       setResetCopied(false);
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Reset failed');
@@ -105,8 +107,8 @@ export default function TrainersPage() {
   if (user && !allowed) {
     return (
       <div className="space-y-2">
-        <h1 className="text-2xl font-bold">Trainers</h1>
-        <p className="text-destructive">Only SuperAdmin and Admin can manage trainers.</p>
+        <h1 className="text-2xl font-bold">{t('userMgmt.trainerTitle')}</h1>
+        <p className="text-destructive">{t('userMgmt.trainerOnly')}</p>
       </div>
     );
   }
@@ -115,26 +117,26 @@ export default function TrainersPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold">Trainers</h1>
-          <p className="text-sm text-muted-foreground">Manage course instructors</p>
+          <h1 className="text-2xl font-bold">{t('userMgmt.trainerTitle')}</h1>
+          <p className="text-sm text-muted-foreground">{t('userMgmt.trainerDesc')}</p>
         </div>
         <Button size="sm" onClick={() => setCreateOpen(true)}>
-          + New trainer
+          {t('userMgmt.trainerNew')}
         </Button>
       </div>
 
       <div className="max-w-sm">
         <Input
-          placeholder="Search by name, email, phone, specialization…"
+          placeholder={t('userMgmt.searchByNameEmailSpec')}
           value={search}
           onChange={(e) => setSearch(e.target.value)}
         />
       </div>
 
       {error && <p className="text-destructive">{error}</p>}
-      {!filtered && !error && <p className="text-muted-foreground">Loading…</p>}
+      {!filtered && !error && <p className="text-muted-foreground">{t('common.loading')}</p>}
       {filtered && filtered.length === 0 && (
-        <p className="text-muted-foreground">No trainers match.</p>
+        <p className="text-muted-foreground">{t('userMgmt.noMatch').replace('{role}', t('userMgmt.trainerRole'))}</p>
       )}
 
       {filtered && filtered.length > 0 && (
@@ -143,39 +145,39 @@ export default function TrainersPage() {
             <thead className="bg-muted/50 text-left text-xs uppercase text-muted-foreground">
               <tr>
                 <th className="p-3"></th>
-                <th className="p-3">Name</th>
-                <th className="p-3">Email</th>
-                <th className="p-3">Specialization</th>
-                <th className="p-3">Phone</th>
-                <th className="p-3">CV</th>
-                <th className="p-3">Active</th>
-                <th className="p-3 text-right">Actions</th>
+                <th className="p-3">{t('common.name')}</th>
+                <th className="p-3">{t('common.email')}</th>
+                <th className="p-3">{t('userMgmt.specialization')}</th>
+                <th className="p-3">{t('common.phone')}</th>
+                <th className="p-3">{t('userMgmt.cv')}</th>
+                <th className="p-3">{t('common.active')}</th>
+                <th className="p-3 text-right">{t('common.actions')}</th>
               </tr>
             </thead>
             <tbody className="divide-y">
-              {filtered.map((t) => {
-                const photo = uploadUrl(t.photoPath);
-                const cv = uploadUrl(t.cvPath);
+              {filtered.map((tr) => {
+                const photo = uploadUrl(tr.photoPath);
+                const cv = uploadUrl(tr.cvPath);
                 return (
-                  <tr key={t.id}>
+                  <tr key={tr.id}>
                     <td className="p-3">
                       {photo ? (
                         // eslint-disable-next-line @next/next/no-img-element
                         <img
                           src={photo}
-                          alt={t.name}
+                          alt={tr.name}
                           className="h-9 w-9 rounded-full border object-cover"
                         />
                       ) : (
                         <div className="flex h-9 w-9 items-center justify-center rounded-full border bg-muted text-xs">
-                          {t.name.charAt(0).toUpperCase()}
+                          {tr.name.charAt(0).toUpperCase()}
                         </div>
                       )}
                     </td>
-                    <td className="p-3 font-medium">{t.name}</td>
-                    <td className="p-3 text-muted-foreground">{t.user.email}</td>
-                    <td className="p-3">{t.specialization ?? '—'}</td>
-                    <td className="p-3">{t.phone ?? '—'}</td>
+                    <td className="p-3 font-medium">{tr.name}</td>
+                    <td className="p-3 text-muted-foreground">{tr.user.email}</td>
+                    <td className="p-3">{tr.specialization ?? '—'}</td>
+                    <td className="p-3">{tr.phone ?? '—'}</td>
                     <td className="p-3">
                       {cv ? (
                         <a
@@ -184,20 +186,20 @@ export default function TrainersPage() {
                           rel="noreferrer"
                           className="text-primary underline"
                         >
-                          View
+                          {t('common.view')}
                         </a>
                       ) : (
                         '—'
                       )}
                     </td>
                     <td className="p-3">
-                      {t.user.isActive ? (
+                      {tr.user.isActive ? (
                         <span className="rounded-full bg-green-100 px-2 py-0.5 text-xs text-green-800 dark:bg-green-900/30 dark:text-green-300">
-                          Active
+                          {t('common.active')}
                         </span>
                       ) : (
                         <span className="rounded-full bg-red-100 px-2 py-0.5 text-xs text-red-800 dark:bg-red-900/30 dark:text-red-300">
-                          Inactive
+                          {t('common.inactive')}
                         </span>
                       )}
                     </td>
@@ -206,34 +208,34 @@ export default function TrainersPage() {
                         <Button
                           size="sm"
                           variant="outline"
-                          onClick={() => setEditing(t)}
-                          disabled={busyId === t.id}
+                          onClick={() => setEditing(tr)}
+                          disabled={busyId === tr.id}
                         >
-                          Edit
+                          {t('common.edit')}
                         </Button>
                         <Button
                           size="sm"
                           variant="outline"
-                          onClick={() => void resetPassword(t)}
-                          disabled={busyId === t.id}
+                          onClick={() => void resetPassword(tr)}
+                          disabled={busyId === tr.id}
                         >
-                          Reset password
+                          {t('userMgmt.resetPassword')}
                         </Button>
                         <Button
                           size="sm"
                           variant="outline"
-                          onClick={() => void toggleActive(t)}
-                          disabled={busyId === t.id}
+                          onClick={() => void toggleActive(tr)}
+                          disabled={busyId === tr.id}
                         >
-                          {t.user.isActive ? 'Deactivate' : 'Activate'}
+                          {tr.user.isActive ? t('userMgmt.deactivate') : t('userMgmt.activate')}
                         </Button>
                         <Button
                           size="sm"
                           variant="destructive"
-                          onClick={() => setDeleting(t)}
-                          disabled={busyId === t.id}
+                          onClick={() => setDeleting(tr)}
+                          disabled={busyId === tr.id}
                         >
-                          Delete
+                          {t('common.delete')}
                         </Button>
                       </div>
                     </td>
@@ -248,33 +250,35 @@ export default function TrainersPage() {
       <CreateTrainerDialog
         open={createOpen}
         onClose={() => setCreateOpen(false)}
-        onCreated={(t) => setList((prev) => (prev ? [t, ...prev] : [t]))}
+        onCreated={(tr) => setList((prev) => (prev ? [tr, ...prev] : [tr]))}
       />
 
       <EditTrainerDialog
         trainer={editing}
         onClose={() => setEditing(null)}
-        onUpdated={(t) =>
-          setList((prev) => (prev ? prev.map((x) => (x.id === t.id ? t : x)) : prev))
+        onUpdated={(tr) =>
+          setList((prev) => (prev ? prev.map((x) => (x.id === tr.id ? tr : x)) : prev))
         }
       />
 
       <Dialog
         open={!!deleting}
         onClose={() => !deletingBusy && setDeleting(null)}
-        title="Delete trainer?"
+        title={t('userMgmt.deleteUserConfirm').replace('{role}', t('userMgmt.trainerRole'))}
         description={
           deleting
-            ? `This will permanently delete ${deleting.name} (${deleting.user.email}), their user account, and uploaded photo/CV.`
+            ? t('userMgmt.deleteTrainerDesc')
+                .replace('{name}', deleting.name)
+                .replace('{email}', deleting.user.email)
             : ''
         }
       >
         <div className="flex justify-end gap-2">
           <Button variant="outline" onClick={() => setDeleting(null)} disabled={deletingBusy}>
-            Cancel
+            {t('common.cancel')}
           </Button>
           <Button variant="destructive" onClick={() => void confirmDelete()} disabled={deletingBusy}>
-            {deletingBusy ? 'Deleting…' : 'Delete'}
+            {deletingBusy ? t('common.deleting') : t('common.delete')}
           </Button>
         </div>
       </Dialog>
@@ -282,14 +286,13 @@ export default function TrainersPage() {
       <Dialog
         open={!!resetTemp}
         onClose={() => setResetTemp(null)}
-        title="Temporary password generated"
-        description={resetTemp ? `For ${resetTemp.name}` : ''}
+        title={t('userMgmt.tempPassword')}
+        description={resetTemp ? t('userMgmt.tempPasswordFor').replace('{name}', resetTemp.name) : ''}
       >
         {resetTemp && (
           <div className="space-y-3">
             <p className="text-sm text-muted-foreground">
-              Share this with the trainer. They should change it on first login.
-              All existing sessions for this account have been revoked.
+              {t('userMgmt.tempPasswordHelp').replace('{role}', t('userMgmt.trainerRole'))}
             </p>
             <div className="flex items-center gap-2">
               <code className="flex-1 rounded-md bg-muted px-3 py-2 font-mono text-sm">
@@ -304,11 +307,11 @@ export default function TrainersPage() {
                   setTimeout(() => setResetCopied(false), 1500);
                 }}
               >
-                {resetCopied ? 'Copied!' : 'Copy'}
+                {resetCopied ? t('common.copied') : t('common.copy')}
               </Button>
             </div>
             <div className="flex justify-end pt-2">
-              <Button onClick={() => setResetTemp(null)}>Done</Button>
+              <Button onClick={() => setResetTemp(null)}>{t('common.done')}</Button>
             </div>
           </div>
         )}

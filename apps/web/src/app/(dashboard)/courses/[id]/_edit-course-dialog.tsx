@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
+import { useT } from '@/i18n/provider';
 import { api } from '@/lib/api';
 import type { CourseDetail } from '@/lib/types';
 
@@ -23,6 +24,7 @@ interface Props {
 }
 
 export function EditCourseDialog({ open, course, onClose, onUpdated }: Props) {
+  const t = useT();
   const [trainers, setTrainers] = useState<OptionRow[]>([]);
   const [coordinators, setCoordinators] = useState<OptionRow[]>([]);
   const [clients, setClients] = useState<OptionRow[]>([]);
@@ -57,8 +59,8 @@ export function EditCourseDialog({ open, course, onClose, onUpdated }: Props) {
       api<OptionRow[]>('/trainers'),
       api<OptionRow[]>('/coordinators'),
       api<OptionRow[]>('/clients'),
-    ]).then(([t, c, cl]) => {
-      if (t.status === 'fulfilled') setTrainers(t.value);
+    ]).then(([tr, c, cl]) => {
+      if (tr.status === 'fulfilled') setTrainers(tr.value);
       if (c.status === 'fulfilled') setCoordinators(c.value);
       if (cl.status === 'fulfilled') setClients(cl.value);
     });
@@ -102,12 +104,12 @@ export function EditCourseDialog({ open, course, onClose, onUpdated }: Props) {
     <Dialog
       open={open}
       onClose={() => !submitting && onClose()}
-      title="Edit course"
-      description="Note: changing dates does NOT regenerate the class schedule — edit individual classes from the Classes tab."
+      title={t('courses.editCourse')}
+      description={t('courses.editDateNote')}
     >
       <form onSubmit={onSubmit} className="space-y-4">
         <div className="space-y-2">
-          <Label htmlFor="edit-courseName">Course name *</Label>
+          <Label htmlFor="edit-courseName">{t('courses.courseName')} *</Label>
           <Input
             id="edit-courseName"
             value={courseName}
@@ -117,7 +119,7 @@ export function EditCourseDialog({ open, course, onClose, onUpdated }: Props) {
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="edit-projectName">Project name</Label>
+          <Label htmlFor="edit-projectName">{t('courses.projectName')}</Label>
           <Input
             id="edit-projectName"
             value={projectName}
@@ -127,7 +129,7 @@ export function EditCourseDialog({ open, course, onClose, onUpdated }: Props) {
 
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-2">
-            <Label htmlFor="edit-startDate">Start date *</Label>
+            <Label htmlFor="edit-startDate">{t('courses.startDate')} *</Label>
             <Input
               id="edit-startDate"
               type="date"
@@ -137,7 +139,7 @@ export function EditCourseDialog({ open, course, onClose, onUpdated }: Props) {
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="edit-endDate">End date *</Label>
+            <Label htmlFor="edit-endDate">{t('courses.endDate')} *</Label>
             <Input
               id="edit-endDate"
               type="date"
@@ -149,7 +151,7 @@ export function EditCourseDialog({ open, course, onClose, onUpdated }: Props) {
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="edit-location">Location</Label>
+          <Label htmlFor="edit-location">{t('courses.location')}</Label>
           <Input
             id="edit-location"
             value={location}
@@ -158,7 +160,7 @@ export function EditCourseDialog({ open, course, onClose, onUpdated }: Props) {
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="edit-description">Description</Label>
+          <Label htmlFor="edit-description">{t('common.description')}</Label>
           <Textarea
             id="edit-description"
             value={description}
@@ -168,29 +170,29 @@ export function EditCourseDialog({ open, course, onClose, onUpdated }: Props) {
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="edit-trainer">Trainer</Label>
+          <Label htmlFor="edit-trainer">{t('courses.trainer')}</Label>
           <Select
             id="edit-trainer"
             value={trainerId}
             onChange={(e) => setTrainerId(e.target.value)}
           >
-            <option value="">— none —</option>
-            {trainers.map((t) => (
-              <option key={t.id} value={t.id}>
-                {t.name}
+            <option value="">{t('common.none')}</option>
+            {trainers.map((tr) => (
+              <option key={tr.id} value={tr.id}>
+                {tr.name}
               </option>
             ))}
           </Select>
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="edit-coordinator">Coordinator</Label>
+          <Label htmlFor="edit-coordinator">{t('courses.coordinator')}</Label>
           <Select
             id="edit-coordinator"
             value={coordinatorId}
             onChange={(e) => setCoordinatorId(e.target.value)}
           >
-            <option value="">— none —</option>
+            <option value="">{t('common.none')}</option>
             {coordinators.map((c) => (
               <option key={c.id} value={c.id}>
                 {c.name}
@@ -200,13 +202,13 @@ export function EditCourseDialog({ open, course, onClose, onUpdated }: Props) {
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="edit-client">Client</Label>
+          <Label htmlFor="edit-client">{t('courses.client')}</Label>
           <Select
             id="edit-client"
             value={clientId}
             onChange={(e) => setClientId(e.target.value)}
           >
-            <option value="">— none —</option>
+            <option value="">{t('common.none')}</option>
             {clients.map((c) => (
               <option key={c.id} value={c.id}>
                 {c.name}
@@ -223,10 +225,10 @@ export function EditCourseDialog({ open, course, onClose, onUpdated }: Props) {
 
         <div className="flex justify-end gap-2 pt-2">
           <Button type="button" variant="outline" onClick={onClose} disabled={submitting}>
-            Cancel
+            {t('common.cancel')}
           </Button>
           <Button type="submit" disabled={submitting}>
-            {submitting ? 'Saving…' : 'Save changes'}
+            {submitting ? t('common.saving') : t('common.saveChanges')}
           </Button>
         </div>
       </form>

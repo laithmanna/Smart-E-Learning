@@ -6,6 +6,7 @@ import { Card } from '@/components/ui/card';
 import { Dialog } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { useAuth } from '@/hooks/use-auth';
+import { useT } from '@/i18n/provider';
 import { api } from '@/lib/api';
 import type { Admin, Role } from '@/lib/types';
 import { CreateAdminDialog } from './_create-admin-dialog';
@@ -15,6 +16,7 @@ const ALLOWED: Role[] = ['SUPER_ADMIN'];
 
 export default function AdminsPage() {
   const { user } = useAuth();
+  const t = useT();
   const [list, setList] = useState<Admin[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState('');
@@ -104,8 +106,8 @@ export default function AdminsPage() {
   if (user && !allowed) {
     return (
       <div className="space-y-2">
-        <h1 className="text-2xl font-bold">Admins</h1>
-        <p className="text-destructive">Only SuperAdmin can manage admins.</p>
+        <h1 className="text-2xl font-bold">{t('userMgmt.adminTitle')}</h1>
+        <p className="text-destructive">{t('userMgmt.adminOnly')}</p>
       </div>
     );
   }
@@ -114,28 +116,28 @@ export default function AdminsPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold">Admins</h1>
+          <h1 className="text-2xl font-bold">{t('userMgmt.adminTitle')}</h1>
           <p className="text-sm text-muted-foreground">
-            Manage system administrators (SuperAdmin only)
+            {t('userMgmt.adminDesc')}
           </p>
         </div>
         <Button size="sm" onClick={() => setCreateOpen(true)}>
-          + New admin
+          {t('userMgmt.adminNew')}
         </Button>
       </div>
 
       <div className="max-w-sm">
         <Input
-          placeholder="Search by name, email, phone…"
+          placeholder={t('userMgmt.searchByNameEmailPhone')}
           value={search}
           onChange={(e) => setSearch(e.target.value)}
         />
       </div>
 
       {error && <p className="text-destructive">{error}</p>}
-      {!filtered && !error && <p className="text-muted-foreground">Loading…</p>}
+      {!filtered && !error && <p className="text-muted-foreground">{t('common.loading')}</p>}
       {filtered && filtered.length === 0 && (
-        <p className="text-muted-foreground">No admins match.</p>
+        <p className="text-muted-foreground">{t('userMgmt.noMatch').replace('{role}', t('userMgmt.adminRole'))}</p>
       )}
 
       {filtered && filtered.length > 0 && (
@@ -143,12 +145,12 @@ export default function AdminsPage() {
           <table className="w-full text-sm">
             <thead className="bg-muted/50 text-left text-xs uppercase text-muted-foreground">
               <tr>
-                <th className="p-3">Name</th>
-                <th className="p-3">Email</th>
-                <th className="p-3">Phone</th>
-                <th className="p-3">Role</th>
-                <th className="p-3">Active</th>
-                <th className="p-3 text-right">Actions</th>
+                <th className="p-3">{t('common.name')}</th>
+                <th className="p-3">{t('common.email')}</th>
+                <th className="p-3">{t('common.phone')}</th>
+                <th className="p-3">{t('common.role')}</th>
+                <th className="p-3">{t('common.active')}</th>
+                <th className="p-3 text-right">{t('common.actions')}</th>
               </tr>
             </thead>
             <tbody className="divide-y">
@@ -162,22 +164,22 @@ export default function AdminsPage() {
                     <td className="p-3">
                       {isSuper ? (
                         <span className="rounded-full bg-purple-100 px-2 py-0.5 text-xs text-purple-800 dark:bg-purple-900/30 dark:text-purple-300">
-                          SuperAdmin
+                          {t('userMgmt.superAdminBadge')}
                         </span>
                       ) : (
                         <span className="rounded-full bg-blue-100 px-2 py-0.5 text-xs text-blue-800 dark:bg-blue-900/30 dark:text-blue-300">
-                          Admin
+                          {t('userMgmt.adminBadge')}
                         </span>
                       )}
                     </td>
                     <td className="p-3">
                       {a.user.isActive ? (
                         <span className="rounded-full bg-green-100 px-2 py-0.5 text-xs text-green-800 dark:bg-green-900/30 dark:text-green-300">
-                          Active
+                          {t('common.active')}
                         </span>
                       ) : (
                         <span className="rounded-full bg-red-100 px-2 py-0.5 text-xs text-red-800 dark:bg-red-900/30 dark:text-red-300">
-                          Inactive
+                          {t('common.inactive')}
                         </span>
                       )}
                     </td>
@@ -189,7 +191,7 @@ export default function AdminsPage() {
                           onClick={() => setEditing(a)}
                           disabled={busyId === a.id}
                         >
-                          Edit
+                          {t('common.edit')}
                         </Button>
                         <Button
                           size="sm"
@@ -197,11 +199,11 @@ export default function AdminsPage() {
                           onClick={() => void resetPassword(a)}
                           disabled={busyId === a.id}
                         >
-                          Reset password
+                          {t('userMgmt.resetPassword')}
                         </Button>
                         {isSuper ? (
-                          <Button size="sm" variant="outline" disabled title="Cannot disable SuperAdmin">
-                            Protected
+                          <Button size="sm" variant="outline" disabled title={t('userMgmt.protectedTitle')}>
+                            {t('userMgmt.protected')}
                           </Button>
                         ) : (
                           <>
@@ -211,7 +213,7 @@ export default function AdminsPage() {
                               onClick={() => void toggleActive(a)}
                               disabled={busyId === a.id}
                             >
-                              {a.user.isActive ? 'Deactivate' : 'Activate'}
+                              {a.user.isActive ? t('userMgmt.deactivate') : t('userMgmt.activate')}
                             </Button>
                             <Button
                               size="sm"
@@ -219,7 +221,7 @@ export default function AdminsPage() {
                               onClick={() => setDeleting(a)}
                               disabled={busyId === a.id}
                             >
-                              Delete
+                              {t('common.delete')}
                             </Button>
                           </>
                         )}
@@ -250,19 +252,21 @@ export default function AdminsPage() {
       <Dialog
         open={!!deleting}
         onClose={() => !deletingBusy && setDeleting(null)}
-        title="Delete admin?"
+        title={t('userMgmt.deleteUserConfirm').replace('{role}', t('userMgmt.adminRole'))}
         description={
           deleting
-            ? `This will permanently delete ${deleting.name} (${deleting.user.email}) and their user account.`
+            ? t('userMgmt.deleteUserDesc')
+                .replace('{name}', deleting.name)
+                .replace('{email}', deleting.user.email)
             : ''
         }
       >
         <div className="flex justify-end gap-2">
           <Button variant="outline" onClick={() => setDeleting(null)} disabled={deletingBusy}>
-            Cancel
+            {t('common.cancel')}
           </Button>
           <Button variant="destructive" onClick={() => void confirmDelete()} disabled={deletingBusy}>
-            {deletingBusy ? 'Deleting…' : 'Delete'}
+            {deletingBusy ? t('common.deleting') : t('common.delete')}
           </Button>
         </div>
       </Dialog>
@@ -270,14 +274,13 @@ export default function AdminsPage() {
       <Dialog
         open={!!resetTemp}
         onClose={() => setResetTemp(null)}
-        title="Temporary password generated"
-        description={resetTemp ? `For ${resetTemp.name}` : ''}
+        title={t('userMgmt.tempPassword')}
+        description={resetTemp ? t('userMgmt.tempPasswordFor').replace('{name}', resetTemp.name) : ''}
       >
         {resetTemp && (
           <div className="space-y-3">
             <p className="text-sm text-muted-foreground">
-              Share this with the admin. They should change it on first login.
-              All existing sessions for this account have been revoked.
+              {t('userMgmt.tempPasswordHelp').replace('{role}', t('userMgmt.adminRole'))}
             </p>
             <div className="flex items-center gap-2">
               <code className="flex-1 rounded-md bg-muted px-3 py-2 font-mono text-sm">
@@ -292,11 +295,11 @@ export default function AdminsPage() {
                   setTimeout(() => setResetCopied(false), 1500);
                 }}
               >
-                {resetCopied ? 'Copied!' : 'Copy'}
+                {resetCopied ? t('common.copied') : t('common.copy')}
               </Button>
             </div>
             <div className="flex justify-end pt-2">
-              <Button onClick={() => setResetTemp(null)}>Done</Button>
+              <Button onClick={() => setResetTemp(null)}>{t('common.done')}</Button>
             </div>
           </div>
         )}

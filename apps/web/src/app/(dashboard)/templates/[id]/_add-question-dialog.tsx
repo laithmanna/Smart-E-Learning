@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Dialog } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { useT } from '@/i18n/provider';
 import { api } from '@/lib/api';
 import type { TemplateQuestion } from '@/lib/types';
 
@@ -21,6 +22,7 @@ export function AddTemplateQuestionDialog({
   onClose,
   onAdded,
 }: Props) {
+  const t = useT();
   const [text, setText] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -61,19 +63,19 @@ export function AddTemplateQuestionDialog({
           onClose();
         }
       }}
-      title="Add question"
-      description="Phrase it as a question — students will rate it when applied to an evaluation."
+      title={t('template.addQuestion').replace('+ ', '')}
+      description={t('template.addQuestionDesc')}
     >
       <form onSubmit={onSubmit} className="space-y-4">
         <div className="space-y-2">
-          <Label htmlFor="tplq-text">Question *</Label>
+          <Label htmlFor="tplq-text">{t('template.questionRequired')}</Label>
           <Textarea
             id="tplq-text"
             value={text}
             onChange={(e) => setText(e.target.value)}
             rows={3}
             required
-            placeholder="e.g. How well did the trainer explain the material?"
+            placeholder={t('template.addQuestionPlaceholder')}
           />
         </div>
         {error && (
@@ -91,10 +93,10 @@ export function AddTemplateQuestionDialog({
             }}
             disabled={submitting}
           >
-            Cancel
+            {t('common.cancel')}
           </Button>
           <Button type="submit" disabled={submitting}>
-            {submitting ? 'Adding…' : 'Add question'}
+            {submitting ? t('common.creating') : t('template.addQuestion').replace('+ ', '')}
           </Button>
         </div>
       </form>

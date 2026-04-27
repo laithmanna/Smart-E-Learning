@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Dialog } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { useT } from '@/i18n/provider';
 import { api } from '@/lib/api';
 import type { EvaluationQuestion } from '@/lib/types';
 
@@ -24,6 +25,7 @@ export function EvalQuestionDialog({
   onClose,
   onSaved,
 }: Props) {
+  const t = useT();
   const isEdit = !!question;
   const [text, setText] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -72,16 +74,16 @@ export function EvalQuestionDialog({
     <Dialog
       open={open}
       onClose={() => !submitting && onClose()}
-      title={isEdit ? 'Edit question' : 'Add question'}
+      title={isEdit ? t('exam.editQuestion') : t('evaluation.addQuestionTitle')}
       description={
         isEdit
-          ? 'Modifying existing questions is disabled to preserve response data.'
-          : 'Each student gives a rating per question.'
+          ? t('evaluation.cannotEditQuestion')
+          : t('evaluation.studentRatesEach')
       }
     >
       <form onSubmit={onSubmit} className="space-y-4">
         <div className="space-y-2">
-          <Label htmlFor="evalQ">Question *</Label>
+          <Label htmlFor="evalQ">{t('exam.question')} *</Label>
           <Textarea
             id="evalQ"
             value={text}
@@ -89,7 +91,7 @@ export function EvalQuestionDialog({
             rows={3}
             required
             disabled={isEdit}
-            placeholder="e.g. How well did the trainer explain the material?"
+            placeholder={t('evaluation.questionPlaceholder')}
           />
         </div>
         {error && (
@@ -99,11 +101,11 @@ export function EvalQuestionDialog({
         )}
         <div className="flex justify-end gap-2 pt-2">
           <Button type="button" variant="outline" onClick={onClose} disabled={submitting}>
-            Cancel
+            {t('common.cancel')}
           </Button>
           {!isEdit && (
             <Button type="submit" disabled={submitting}>
-              {submitting ? 'Saving…' : 'Add question'}
+              {submitting ? t('common.saving') : t('evaluation.addQuestionTitle')}
             </Button>
           )}
         </div>

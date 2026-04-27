@@ -6,6 +6,7 @@ import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { useAuth } from '@/hooks/use-auth';
+import { useT } from '@/i18n/provider';
 import { api } from '@/lib/api';
 import { cn } from '@/lib/utils';
 import type { EvaluationDetail } from '@/lib/types';
@@ -24,6 +25,14 @@ export default function FillEvaluationPage() {
   const courseId = params?.id;
   const evaluationId = params?.evaluationId;
   const { user } = useAuth();
+  const t = useT();
+  const RATING_LABELS: Record<typeof RATINGS[number], string> = {
+    Excellent: t('evaluation.ratings.excellent'),
+    Good: t('evaluation.ratings.good'),
+    Average: t('evaluation.ratings.average'),
+    Poor: t('evaluation.ratings.poor'),
+    'Very poor': t('evaluation.ratings.veryPoor'),
+  };
 
   const [evalRec, setEvalRec] = useState<EvaluationDetail | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -80,14 +89,14 @@ export default function FillEvaluationPage() {
           href={`/courses/${courseId}`}
           className="text-sm text-muted-foreground hover:underline"
         >
-          ← Back to course
+          {t('common.backToCourse')}
         </Link>
         <p className="text-destructive">{error}</p>
       </div>
     );
   }
   if (!evalRec) {
-    return <p className="text-muted-foreground">Loading…</p>;
+    return <p className="text-muted-foreground">{t('common.loading')}</p>;
   }
   if (user && user.role !== 'STUDENT') {
     return (
@@ -113,18 +122,17 @@ export default function FillEvaluationPage() {
             href={`/courses/${courseId}`}
             className="text-sm text-muted-foreground hover:underline"
           >
-            ← Back to course
+            {t('common.backToCourse')}
           </Link>
         </div>
         <Card>
           <CardContent className="space-y-4 pt-6 text-center">
-            <p className="text-2xl font-semibold">Thanks for your feedback ✓</p>
+            <p className="text-2xl font-semibold">{t('evaluation.thanks')}</p>
             <p className="text-sm text-muted-foreground">
-              Your responses have been recorded. You can come back and update them
-              any time while the evaluation is open.
+              {t('evaluation.thanksDesc')}
             </p>
             <Link href={`/courses/${courseId}`}>
-              <Button>Back to course</Button>
+              <Button>{t('common.backToCourse')}</Button>
             </Link>
           </CardContent>
         </Card>
@@ -141,20 +149,18 @@ export default function FillEvaluationPage() {
           href={`/courses/${courseId}`}
           className="text-sm text-muted-foreground hover:underline"
         >
-          ← Back to course
+          {t('common.backToCourse')}
         </Link>
       </div>
 
       <div className="space-y-1">
         <h1 className="text-2xl font-bold">{evalRec.name}</h1>
         <p className="text-sm text-muted-foreground">
-          {evalRec.questions.length} question
-          {evalRec.questions.length === 1 ? '' : 's'} · pick a rating for each
+          {evalRec.questions.length} {t('template.questions')} · {t('evaluation.pickRating')}
         </p>
         {hasPrior && (
           <p className="rounded-md bg-muted px-3 py-2 text-sm">
-            You&apos;ve already submitted this — your previous answers are loaded.
-            Change any of them and submit to update.
+            {t('evaluation.alreadySubmitted')}
           </p>
         )}
       </div>
@@ -165,7 +171,7 @@ export default function FillEvaluationPage() {
             <CardContent className="space-y-3 pt-6">
               <div>
                 <p className="text-xs uppercase text-muted-foreground">
-                  Question {i + 1}
+                  {t('exam.question')} {i + 1}
                 </p>
                 <p className="mt-1 font-medium">{q.question}</p>
               </div>
@@ -190,7 +196,7 @@ export default function FillEvaluationPage() {
                         }
                         className="sr-only"
                       />
-                      {r}
+                      {RATING_LABELS[r]}
                     </label>
                   );
                 })}
@@ -203,13 +209,13 @@ export default function FillEvaluationPage() {
       <div className="sticky bottom-0 -mx-8 border-t bg-background px-8 py-4">
         <div className="flex items-center justify-between">
           <p className="text-sm text-muted-foreground">
-            {Object.keys(ratings).length} / {evalRec.questions.length} answered
+            {Object.keys(ratings).length} / {evalRec.questions.length} {t('exam.answered')}
           </p>
           <Button
             onClick={() => void submit()}
             disabled={submitting || !allAnswered}
           >
-            {submitting ? 'Submitting…' : hasPrior ? 'Update responses' : 'Submit evaluation'}
+            {submitting ? t('common.submitting') : hasPrior ? t('evaluation.updateResponses') : t('evaluation.submitEvaluation')}
           </Button>
         </div>
       </div>

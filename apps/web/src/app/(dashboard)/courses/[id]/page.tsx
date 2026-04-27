@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog } from '@/components/ui/dialog';
 import { useAuth } from '@/hooks/use-auth';
+import { useT } from '@/i18n/provider';
 import { api } from '@/lib/api';
 import { cn, uploadUrl } from '@/lib/utils';
 import type {
@@ -35,6 +36,7 @@ export default function CourseDetailPage() {
   const id = params?.id;
   const router = useRouter();
   const { user } = useAuth();
+  const t = useT();
 
   const [course, setCourse] = useState<CourseDetail | null>(null);
   const [students, setStudents] = useState<EnrollmentRow[] | null>(null);
@@ -183,7 +185,7 @@ export default function CourseDetailPage() {
     return (
       <div className="space-y-4">
         <Link href="/courses" className="text-sm text-muted-foreground hover:underline">
-          ← Back to courses
+          {t('common.backToCourses')}
         </Link>
         <p className="text-destructive">{error}</p>
       </div>
@@ -191,7 +193,7 @@ export default function CourseDetailPage() {
   }
 
   if (!course) {
-    return <p className="text-muted-foreground">Loading…</p>;
+    return <p className="text-muted-foreground">{t('common.loading')}</p>;
   }
 
   return (
@@ -201,7 +203,7 @@ export default function CourseDetailPage() {
           href="/courses"
           className="text-sm text-muted-foreground hover:underline"
         >
-          ← Back to courses
+          {t('common.backToCourses')}
         </Link>
       </div>
 
@@ -211,11 +213,11 @@ export default function CourseDetailPage() {
             <h1 className="text-2xl font-bold">{course.courseName}</h1>
             {course.isClosed ? (
               <span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs text-amber-800 dark:bg-amber-900/30 dark:text-amber-300">
-                Closed
+                {t('courses.closed')}
               </span>
             ) : (
               <span className="rounded-full bg-green-100 px-2 py-0.5 text-xs text-green-800 dark:bg-green-900/30 dark:text-green-300">
-                Active
+                {t('common.active')}
               </span>
             )}
           </div>
@@ -227,13 +229,13 @@ export default function CourseDetailPage() {
           {(canManage || user?.role === 'CLIENT') && (
             <Link href={`/courses/${course.id}/reports`}>
               <Button size="sm" variant="outline">
-                Reports
+                {t('courses.reports')}
               </Button>
             </Link>
           )}
           {canManage && !course.isClosed && (
             <Button size="sm" variant="outline" onClick={() => setEditCourseOpen(true)}>
-              Edit course
+              {t('courses.editCourse')}
             </Button>
           )}
           {canManage && (
@@ -243,7 +245,7 @@ export default function CourseDetailPage() {
               onClick={() => void toggleClosed()}
               disabled={closeBusy}
             >
-              {closeBusy ? '…' : course.isClosed ? 'Reopen course' : 'Close course'}
+              {closeBusy ? '…' : course.isClosed ? t('courses.reopenCourse') : t('courses.closeCourse')}
             </Button>
           )}
           {(user?.role === 'SUPER_ADMIN' || user?.role === 'ADMIN') && (
@@ -253,25 +255,25 @@ export default function CourseDetailPage() {
               onClick={() => setConfirmDelete(true)}
               disabled={deleteBusy}
             >
-              Delete
+              {t('common.delete')}
             </Button>
           )}
         </div>
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        <InfoCard label="Start date" value={fmtDate(course.startDate)} />
-        <InfoCard label="End date" value={fmtDate(course.endDate)} />
-        <InfoCard label="Location" value={course.location ?? '—'} />
-        <InfoCard label="Trainer" value={course.trainer?.name ?? '—'} />
-        <InfoCard label="Coordinator" value={course.coordinator?.name ?? '—'} />
-        <InfoCard label="Client" value={course.client?.name ?? '—'} />
+        <InfoCard label={t('courses.startDate')} value={fmtDate(course.startDate)} />
+        <InfoCard label={t('courses.endDate')} value={fmtDate(course.endDate)} />
+        <InfoCard label={t('courses.location')} value={course.location ?? '—'} />
+        <InfoCard label={t('courses.trainer')} value={course.trainer?.name ?? '—'} />
+        <InfoCard label={t('courses.coordinator')} value={course.coordinator?.name ?? '—'} />
+        <InfoCard label={t('courses.client')} value={course.client?.name ?? '—'} />
       </div>
 
       {course.description && (
         <Card>
           <CardHeader>
-            <CardTitle className="text-sm">Description</CardTitle>
+            <CardTitle className="text-sm">{t('common.description')}</CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-sm">{course.description}</p>
@@ -282,19 +284,19 @@ export default function CourseDetailPage() {
       <div className="border-b">
         <nav className="flex gap-1">
           <TabButton active={tab === 'classes'} onClick={() => setTab('classes')}>
-            Classes ({course.classes.length})
+            {t('tabs.classes')} ({course.classes.length})
           </TabButton>
           <TabButton active={tab === 'students'} onClick={() => setTab('students')}>
-            Students ({students?.length ?? '…'})
+            {t('tabs.students')} ({students?.length ?? '…'})
           </TabButton>
           <TabButton active={tab === 'exams'} onClick={() => setTab('exams')}>
-            Exams ({exams?.length ?? '…'})
+            {t('tabs.exams')} ({exams?.length ?? '…'})
           </TabButton>
           <TabButton active={tab === 'evaluations'} onClick={() => setTab('evaluations')}>
-            Evaluations ({evaluations?.length ?? '…'})
+            {t('tabs.evaluations')} ({evaluations?.length ?? '…'})
           </TabButton>
           <TabButton active={tab === 'attachments'} onClick={() => setTab('attachments')}>
-            Attachments ({course.attachments.length})
+            {t('tabs.attachments')} ({course.attachments.length})
           </TabButton>
         </nav>
       </div>
@@ -409,10 +411,10 @@ export default function CourseDetailPage() {
       <Dialog
         open={!!deletingAttachment}
         onClose={() => !deleteAttachmentBusy && setDeletingAttachment(null)}
-        title="Delete attachment?"
+        title={t('attachments.deleteConfirm')}
         description={
           deletingAttachment
-            ? `This permanently removes "${deletingAttachment.fileName}" from the server.`
+            ? t('attachments.deleteDesc').replace('{name}', deletingAttachment.fileName)
             : ''
         }
       >
@@ -422,14 +424,14 @@ export default function CourseDetailPage() {
             onClick={() => setDeletingAttachment(null)}
             disabled={deleteAttachmentBusy}
           >
-            Cancel
+            {t('common.cancel')}
           </Button>
           <Button
             variant="destructive"
             onClick={() => void confirmDeleteAttachment()}
             disabled={deleteAttachmentBusy}
           >
-            {deleteAttachmentBusy ? 'Deleting…' : 'Delete'}
+            {deleteAttachmentBusy ? t('common.deleting') : t('common.delete')}
           </Button>
         </div>
       </Dialog>
@@ -437,8 +439,8 @@ export default function CourseDetailPage() {
       <Dialog
         open={confirmDelete}
         onClose={() => !deleteBusy && setConfirmDelete(false)}
-        title="Delete course?"
-        description={`This permanently deletes ${course.courseName} and all related classes, exams, attendance, attachments.`}
+        title={t('courses.deleteCourse')}
+        description={t('courses.deleteCourseDesc').replace('{name}', course.courseName)}
       >
         <div className="flex justify-end gap-2">
           <Button
@@ -446,14 +448,14 @@ export default function CourseDetailPage() {
             onClick={() => setConfirmDelete(false)}
             disabled={deleteBusy}
           >
-            Cancel
+            {t('common.cancel')}
           </Button>
           <Button
             variant="destructive"
             onClick={() => void deleteCourse()}
             disabled={deleteBusy}
           >
-            {deleteBusy ? 'Deleting…' : 'Delete'}
+            {deleteBusy ? t('common.deleting') : t('common.delete')}
           </Button>
         </div>
       </Dialog>
@@ -507,20 +509,21 @@ function ClassesTable({
   onEdit: (klass: CourseClass) => void;
   onTakeAttendance: (klass: CourseClass) => void;
 }) {
+  const t = useT();
   if (classes.length === 0)
-    return <p className="text-sm text-muted-foreground">No classes scheduled.</p>;
+    return <p className="text-sm text-muted-foreground">{t('classes.noClasses')}</p>;
   return (
     <Card className="overflow-hidden">
       <table className="w-full text-sm">
         <thead className="bg-muted/50 text-left text-xs uppercase text-muted-foreground">
           <tr>
             <th className="p-3">#</th>
-            <th className="p-3">Topic</th>
-            <th className="p-3">Date</th>
-            <th className="p-3">Time</th>
-            <th className="p-3">Location</th>
-            <th className="p-3">Meeting link</th>
-            {canEdit && <th className="p-3 text-right">Actions</th>}
+            <th className="p-3">{t('classes.topic')}</th>
+            <th className="p-3">{t('classes.date')}</th>
+            <th className="p-3">{t('classes.time')}</th>
+            <th className="p-3">{t('classes.location')}</th>
+            <th className="p-3">{t('classes.meetingLink')}</th>
+            {canEdit && <th className="p-3 text-right">{t('common.actions')}</th>}
           </tr>
         </thead>
         <tbody className="divide-y">
@@ -544,7 +547,7 @@ function ClassesTable({
                       rel="noreferrer"
                       className="text-primary underline"
                     >
-                      Join
+                      {t('common.join')}
                     </a>
                   ) : (
                     '—'
@@ -558,10 +561,10 @@ function ClassesTable({
                         variant="outline"
                         onClick={() => onTakeAttendance(c)}
                       >
-                        Attendance
+                        {t('classes.attendance')}
                       </Button>
                       <Button size="sm" variant="outline" onClick={() => onEdit(c)}>
-                        Edit
+                        {t('common.edit')}
                       </Button>
                     </div>
                   </td>
@@ -584,28 +587,29 @@ function StudentsSection({
   canEnroll: boolean;
   onEnroll: () => void;
 }) {
+  const t = useT();
   return (
     <div className="space-y-3">
       {canEnroll && (
         <div className="flex justify-end">
           <Button size="sm" onClick={onEnroll}>
-            + Enroll students
+            {t('enroll.title')}
           </Button>
         </div>
       )}
-      {!rows && <p className="text-sm text-muted-foreground">Loading…</p>}
+      {!rows && <p className="text-sm text-muted-foreground">{t('common.loading')}</p>}
       {rows && rows.length === 0 && (
-        <p className="text-sm text-muted-foreground">No students enrolled yet.</p>
+        <p className="text-sm text-muted-foreground">{t('attendance.noStudents')}</p>
       )}
       {rows && rows.length > 0 && (
         <Card className="overflow-hidden">
           <table className="w-full text-sm">
             <thead className="bg-muted/50 text-left text-xs uppercase text-muted-foreground">
               <tr>
-                <th className="p-3">Name</th>
-                <th className="p-3">Email</th>
-                <th className="p-3">Active</th>
-                <th className="p-3">Enrolled</th>
+                <th className="p-3">{t('common.name')}</th>
+                <th className="p-3">{t('common.email')}</th>
+                <th className="p-3">{t('common.active')}</th>
+                <th className="p-3">{t('common.date')}</th>
               </tr>
             </thead>
             <tbody className="divide-y">
@@ -616,11 +620,11 @@ function StudentsSection({
                   <td className="p-3">
                     {r.student.user.isActive ? (
                       <span className="rounded-full bg-green-100 px-2 py-0.5 text-xs text-green-800 dark:bg-green-900/30 dark:text-green-300">
-                        Active
+                        {t('common.active')}
                       </span>
                     ) : (
                       <span className="rounded-full bg-red-100 px-2 py-0.5 text-xs text-red-800 dark:bg-red-900/30 dark:text-red-300">
-                        Inactive
+                        {t('common.inactive')}
                       </span>
                     )}
                   </td>
@@ -650,31 +654,32 @@ function ExamsSection({
   myResults: { examId: string; marksObtained: number; totalMarks: number }[];
   onCreate: () => void;
 }) {
+  const t = useT();
   return (
     <div className="space-y-3">
       {canCreate && (
         <div className="flex justify-end">
           <Button size="sm" onClick={onCreate}>
-            + New exam
+            {t('exam.newExam')}
           </Button>
         </div>
       )}
-      {!exams && <p className="text-sm text-muted-foreground">Loading…</p>}
+      {!exams && <p className="text-sm text-muted-foreground">{t('common.loading')}</p>}
       {exams && exams.length === 0 && (
-        <p className="text-sm text-muted-foreground">No exams yet.</p>
+        <p className="text-sm text-muted-foreground">{t('exam.noExams')}</p>
       )}
       {exams && exams.length > 0 && (
         <Card className="overflow-hidden">
           <table className="w-full text-sm">
             <thead className="bg-muted/50 text-left text-xs uppercase text-muted-foreground">
               <tr>
-                <th className="p-3">Name</th>
-                <th className="p-3">Date</th>
-                <th className="p-3">Type</th>
-                <th className="p-3">Total marks</th>
-                {!isStudent && <th className="p-3">Questions</th>}
-                {!isStudent && <th className="p-3">Submitted</th>}
-                <th className="p-3 text-right">{isStudent ? 'Action' : ''}</th>
+                <th className="p-3">{t('common.name')}</th>
+                <th className="p-3">{t('common.date')}</th>
+                <th className="p-3">{t('common.type')}</th>
+                <th className="p-3">{t('exam.totalMarks')}</th>
+                {!isStudent && <th className="p-3">{t('exam.questions')}</th>}
+                {!isStudent && <th className="p-3">{t('exam.submitted')}</th>}
+                <th className="p-3 text-right">{isStudent ? t('common.actions') : ''}</th>
               </tr>
             </thead>
             <tbody className="divide-y">
@@ -694,7 +699,7 @@ function ExamsSection({
                     <td className="p-3">{fmtDate(e.examDate)}</td>
                     <td className="p-3">
                       <span className="rounded-full bg-secondary px-2 py-0.5 text-xs">
-                        {e.examType === 'MULTIPLE_CHOICE' ? 'MCQ' : 'Free text'}
+                        {e.examType === 'MULTIPLE_CHOICE' ? t('exam.mcqShort') : t('exam.freeTextShort')}
                       </span>
                     </td>
                     <td className="p-3">{e.totalMarks}</td>
@@ -705,12 +710,12 @@ function ExamsSection({
                         myResult ? (
                           <Link href={`/courses/${courseId}/exams/${e.id}/take`}>
                             <span className="rounded-full bg-green-100 px-3 py-1 text-xs font-medium text-green-800 hover:bg-green-200 dark:bg-green-900/30 dark:text-green-300">
-                              Submitted · {myResult.marksObtained}/{myResult.totalMarks}
+                              {t('exam.submitted')} · {myResult.marksObtained}/{myResult.totalMarks}
                             </span>
                           </Link>
                         ) : (
                           <Link href={`/courses/${courseId}/exams/${e.id}/take`}>
-                            <Button size="sm">Start exam</Button>
+                            <Button size="sm">{t('exam.startExam')}</Button>
                           </Link>
                         )
                       ) : (
@@ -741,19 +746,20 @@ function EvaluationsSection({
   isStudent: boolean;
   onCreate: () => void;
 }) {
+  const t = useT();
   return (
     <div className="space-y-3">
       {canCreate && (
         <div className="flex justify-end">
           <Button size="sm" onClick={onCreate}>
-            + New evaluation
+            {t('evaluation.newEvaluation')}
           </Button>
         </div>
       )}
-      {!evaluations && <p className="text-sm text-muted-foreground">Loading…</p>}
+      {!evaluations && <p className="text-sm text-muted-foreground">{t('common.loading')}</p>}
       {evaluations && evaluations.length === 0 && (
         <p className="text-sm text-muted-foreground">
-          {isStudent ? 'No evaluations available yet.' : 'No evaluations created yet.'}
+          {t('evaluation.noResponsesShort')}
         </p>
       )}
       {evaluations && evaluations.length > 0 && (
@@ -761,11 +767,11 @@ function EvaluationsSection({
           <table className="w-full text-sm">
             <thead className="bg-muted/50 text-left text-xs uppercase text-muted-foreground">
               <tr>
-                <th className="p-3">Name</th>
-                {!isStudent && <th className="p-3">Status</th>}
-                <th className="p-3">Questions</th>
-                <th className="p-3">Created</th>
-                <th className="p-3 text-right">{isStudent ? 'Action' : ''}</th>
+                <th className="p-3">{t('common.name')}</th>
+                {!isStudent && <th className="p-3">{t('common.status')}</th>}
+                <th className="p-3">{t('evaluation.questionsTitle')}</th>
+                <th className="p-3">{t('template.createdAt')}</th>
+                <th className="p-3 text-right">{isStudent ? t('common.actions') : ''}</th>
               </tr>
             </thead>
             <tbody className="divide-y">
@@ -784,11 +790,11 @@ function EvaluationsSection({
                     <td className="p-3">
                       {e.isPublished ? (
                         <span className="rounded-full bg-green-100 px-2 py-0.5 text-xs text-green-800 dark:bg-green-900/30 dark:text-green-300">
-                          Published
+                          {t('evaluation.publishedShort')}
                         </span>
                       ) : (
                         <span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs text-amber-800 dark:bg-amber-900/30 dark:text-amber-300">
-                          Draft
+                          {t('evaluation.draftShort')}
                         </span>
                       )}
                     </td>
@@ -798,7 +804,7 @@ function EvaluationsSection({
                   <td className="p-3 text-right">
                     {isStudent ? (
                       <Link href={`/courses/${courseId}/evaluations/${e.id}/fill`}>
-                        <Button size="sm">Fill evaluation</Button>
+                        <Button size="sm">{t('evaluation.fillEvaluation')}</Button>
                       </Link>
                     ) : (
                       <span className="text-xs text-muted-foreground">→</span>
@@ -829,15 +835,16 @@ function AttachmentsSection({
   onUpload: (file: File) => void;
   onDelete: (a: CourseAttachment) => void;
 }) {
+  const t = useT();
   return (
     <div className="space-y-3">
       {canManage && (
         <Card className="border-dashed">
           <CardContent className="flex flex-col gap-2 pt-6 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <p className="text-sm font-medium">Upload course material</p>
+              <p className="text-sm font-medium">{t('attachments.upload')}</p>
               <p className="text-xs text-muted-foreground">
-                Any file type · max 25 MB · students will see them on the course page.
+                {t('attachments.uploadDesc')}
               </p>
             </div>
             <label className="inline-flex">
@@ -857,7 +864,7 @@ function AttachmentsSection({
                   (uploading ? 'pointer-events-none opacity-50' : '')
                 }
               >
-                {uploading ? 'Uploading…' : '+ Choose file'}
+                {uploading ? t('common.uploading') : t('attachments.chooseFile')}
               </span>
             </label>
           </CardContent>
@@ -871,7 +878,7 @@ function AttachmentsSection({
       )}
 
       {items.length === 0 ? (
-        <p className="text-sm text-muted-foreground">No attachments uploaded.</p>
+        <p className="text-sm text-muted-foreground">{t('attachments.none')}</p>
       ) : (
         <Card className="overflow-hidden">
           <ul className="divide-y">
@@ -882,7 +889,7 @@ function AttachmentsSection({
                   <div className="min-w-0 flex-1">
                     <p className="truncate font-medium">{a.fileName}</p>
                     <p className="text-xs text-muted-foreground">
-                      Uploaded {fmtDate(a.uploadedAt)}
+                      {t('attachments.uploadedOn').replace('{date}', fmtDate(a.uploadedAt))}
                     </p>
                   </div>
                   <div className="flex items-center gap-3">
@@ -893,7 +900,7 @@ function AttachmentsSection({
                         rel="noreferrer"
                         className="text-primary underline"
                       >
-                        Download
+                        {t('common.download')}
                       </a>
                     )}
                     {canManage && (
@@ -902,7 +909,7 @@ function AttachmentsSection({
                         variant="destructive"
                         onClick={() => onDelete(a)}
                       >
-                        Delete
+                        {t('common.delete')}
                       </Button>
                     )}
                   </div>

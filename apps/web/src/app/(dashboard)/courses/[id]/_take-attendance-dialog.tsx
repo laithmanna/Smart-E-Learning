@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Dialog } from '@/components/ui/dialog';
+import { useT } from '@/i18n/provider';
 import { api } from '@/lib/api';
 import { cn } from '@/lib/utils';
 import type { CourseClass, EnrollmentRow } from '@/lib/types';
@@ -27,6 +28,7 @@ export function TakeAttendanceDialog({
   onClose,
   onSaved,
 }: Props) {
+  const t = useT();
   // studentId -> present
   const [marks, setMarks] = useState<Record<string, boolean>>({});
   const [loading, setLoading] = useState(false);
@@ -108,7 +110,7 @@ export function TakeAttendanceDialog({
     <Dialog
       open={!!klass}
       onClose={() => !saving && onClose()}
-      title={`Attendance — ${klass.topic}`}
+      title={`${t('attendance.title')} — ${klass.topic}`}
       description={`${fmt(klass.classDate)} · ${klass.startTime}–${klass.endTime}`}
       className="max-w-xl"
     >
@@ -118,29 +120,29 @@ export function TakeAttendanceDialog({
             <span className="font-semibold text-green-700 dark:text-green-400">
               {counts.present}
             </span>{' '}
-            present ·{' '}
+            {t('attendance.presentCount')} ·{' '}
             <span className="font-semibold text-red-700 dark:text-red-400">
               {counts.absent}
             </span>{' '}
-            absent · {counts.total} total
+            {t('attendance.absentCount')} · {counts.total} {t('attendance.totalCount')}
           </span>
           <div className="flex gap-1">
             <Button size="sm" variant="outline" onClick={() => setAll(true)}>
-              All present
+              {t('attendance.allPresent')}
             </Button>
             <Button size="sm" variant="outline" onClick={() => setAll(false)}>
-              All absent
+              {t('attendance.allAbsent')}
             </Button>
           </div>
         </div>
 
         {loading && (
-          <p className="text-sm text-muted-foreground">Loading…</p>
+          <p className="text-sm text-muted-foreground">{t('common.loading')}</p>
         )}
 
         {!loading && (!enrollments || enrollments.length === 0) && (
           <p className="rounded-md bg-amber-50 p-3 text-sm text-amber-900 dark:bg-amber-900/20 dark:text-amber-200">
-            No students enrolled yet. Enrol students from the Students tab first.
+            {t('attendance.noStudents')}
           </p>
         )}
 
@@ -178,7 +180,7 @@ export function TakeAttendanceDialog({
                         : 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300',
                     )}
                   >
-                    {present ? 'Present' : 'Absent'}
+                    {present ? t('attendance.present') : t('attendance.absent')}
                   </span>
                 </label>
               );
@@ -194,13 +196,13 @@ export function TakeAttendanceDialog({
 
         <div className="flex justify-end gap-2 pt-2">
           <Button variant="outline" onClick={onClose} disabled={saving}>
-            Cancel
+            {t('common.cancel')}
           </Button>
           <Button
             onClick={() => void save()}
             disabled={saving || loading || !enrollments || enrollments.length === 0}
           >
-            {saving ? 'Saving…' : 'Save attendance'}
+            {saving ? t('common.saving') : t('attendance.saveAttendance')}
           </Button>
         </div>
       </div>

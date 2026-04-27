@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Dialog } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { useT } from '@/i18n/provider';
 import { api } from '@/lib/api';
 import type { CourseClass } from '@/lib/types';
 
@@ -23,6 +24,7 @@ function clean(v: string | null | undefined): string {
 }
 
 export function EditClassDialog({ klass, onClose, onUpdated }: Props) {
+  const t = useT();
   const [topic, setTopic] = useState('');
   const [classDate, setClassDate] = useState('');
   const [startTime, setStartTime] = useState('');
@@ -82,17 +84,17 @@ export function EditClassDialog({ klass, onClose, onUpdated }: Props) {
     <Dialog
       open={!!klass}
       onClose={() => !submitting && onClose()}
-      title="Edit class"
+      title={t('classes.editClass')}
       description={klass.topic}
     >
       <form onSubmit={onSubmit} className="space-y-4">
         <div className="space-y-2">
-          <Label htmlFor="topic">Topic *</Label>
+          <Label htmlFor="topic">{t('classes.topic')} *</Label>
           <Input id="topic" value={topic} onChange={(e) => setTopic(e.target.value)} required />
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="classDate">Date *</Label>
+          <Label htmlFor="classDate">{t('classes.date')} *</Label>
           <Input
             id="classDate"
             type="date"
@@ -104,7 +106,7 @@ export function EditClassDialog({ klass, onClose, onUpdated }: Props) {
 
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-2">
-            <Label htmlFor="startTime">Start time *</Label>
+            <Label htmlFor="startTime">{t('classes.startTime')} *</Label>
             <Input
               id="startTime"
               type="time"
@@ -114,7 +116,7 @@ export function EditClassDialog({ klass, onClose, onUpdated }: Props) {
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="endTime">End time *</Label>
+            <Label htmlFor="endTime">{t('classes.endTime')} *</Label>
             <Input
               id="endTime"
               type="time"
@@ -126,7 +128,7 @@ export function EditClassDialog({ klass, onClose, onUpdated }: Props) {
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="location">Location</Label>
+          <Label htmlFor="location">{t('classes.location')}</Label>
           <Input
             id="location"
             value={location}
@@ -136,7 +138,7 @@ export function EditClassDialog({ klass, onClose, onUpdated }: Props) {
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="meetingLink">Meeting link</Label>
+          <Label htmlFor="meetingLink">{t('classes.meetingLink')}</Label>
           <Input
             id="meetingLink"
             type="url"
@@ -154,10 +156,10 @@ export function EditClassDialog({ klass, onClose, onUpdated }: Props) {
 
         <div className="flex justify-end gap-2 pt-2">
           <Button type="button" variant="outline" onClick={onClose} disabled={submitting}>
-            Cancel
+            {t('common.cancel')}
           </Button>
           <Button type="submit" disabled={submitting}>
-            {submitting ? 'Saving…' : 'Save changes'}
+            {submitting ? t('common.saving') : t('common.saveChanges')}
           </Button>
         </div>
       </form>

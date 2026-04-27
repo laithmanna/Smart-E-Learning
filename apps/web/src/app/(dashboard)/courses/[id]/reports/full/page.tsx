@@ -17,6 +17,7 @@ import {
   YAxis,
 } from 'recharts';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { useT } from '@/i18n/provider';
 import { api } from '@/lib/api';
 import { ReportActions } from '../_report-actions';
 
@@ -69,6 +70,7 @@ const COLORS = ['#22c55e', '#ef4444', '#94a3b8'];
 export default function FullReportPage() {
   const params = useParams<{ id: string }>();
   const courseId = params?.id;
+  const t = useT();
   const [report, setReport] = useState<FullReport | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -86,17 +88,17 @@ export default function FullReportPage() {
           href={`/courses/${courseId}/reports`}
           className="text-sm text-muted-foreground hover:underline"
         >
-          ← Back to reports
+          {t('common.backToReports')}
         </Link>
         <p className="text-destructive">{error}</p>
       </div>
     );
   }
-  if (!report) return <p className="text-muted-foreground">Loading…</p>;
+  if (!report) return <p className="text-muted-foreground">{t('common.loading')}</p>;
 
   const attendancePieData = [
-    { name: 'Present', value: report.attendance.present },
-    { name: 'Absent', value: report.attendance.absent },
+    { name: t('reports.presentLabel'), value: report.attendance.present },
+    { name: t('reports.absentLabel'), value: report.attendance.absent },
   ];
   const examChartData = report.exams.perExam.map((e) => ({
     name: e.examName.length > 18 ? e.examName.slice(0, 16) + '…' : e.examName,
@@ -113,50 +115,50 @@ export default function FullReportPage() {
             href={`/courses/${courseId}/reports`}
             className="text-sm text-muted-foreground hover:underline"
           >
-            ← Back to reports
+            {t('common.backToReports')}
           </Link>
         </div>
         <ReportActions />
       </div>
 
       <div>
-        <p className="text-xs uppercase text-muted-foreground">Full course report</p>
+        <p className="text-xs uppercase text-muted-foreground">{t('reports.fullCourse')}</p>
         <h1 className="text-2xl font-bold">{report.course.name}</h1>
         <p className="text-sm text-muted-foreground">
           {report.course.projectName ?? '—'} ·{' '}
           {new Date(report.course.startDate).toISOString().slice(0, 10)} →{' '}
           {new Date(report.course.endDate).toISOString().slice(0, 10)} ·{' '}
-          {report.course.isClosed ? 'Closed' : 'Active'}
+          {report.course.isClosed ? t('courses.closed') : t('common.active')}
         </p>
       </div>
 
       {/* KPI cards */}
       <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-6">
-        <Kpi label="Students" value={report.counts.students} />
-        <Kpi label="Classes" value={report.counts.classes} />
-        <Kpi label="Exams" value={report.counts.exams} />
+        <Kpi label={t('reports.studentsKpi')} value={report.counts.students} />
+        <Kpi label={t('reports.classesKpi')} value={report.counts.classes} />
+        <Kpi label={t('reports.examsKpi')} value={report.counts.exams} />
         <Kpi
-          label="Evaluations"
+          label={t('reports.evaluationsKpi')}
           value={`${report.counts.evaluationsPublished}/${report.counts.evaluationsTotal}`}
-          hint="published / total"
+          hint={t('reports.publishedTotal')}
         />
         <Kpi
-          label="Attendance"
+          label={t('reports.attendance')}
           value={`${report.attendance.attendancePct}%`}
         />
-        <Kpi label="Avg exam %" value={`${report.exams.avgScorePct}%`} />
+        <Kpi label={t('reports.avgExamPct')} value={`${report.exams.avgScorePct}%`} />
       </div>
 
       <div className="grid gap-6 lg:grid-cols-2">
         {/* Attendance pie */}
         <Card>
           <CardHeader>
-            <CardTitle>Overall attendance</CardTitle>
+            <CardTitle>{t('reports.overallAttendance')}</CardTitle>
           </CardHeader>
           <CardContent className="h-72">
             {report.attendance.totalMarks === 0 ? (
               <p className="text-sm text-muted-foreground">
-                No attendance recorded yet.
+                {t('reports.noAttendance')}
               </p>
             ) : (
               <ResponsiveContainer width="100%" height="100%">
@@ -185,12 +187,12 @@ export default function FullReportPage() {
         {/* Exam scores bar */}
         <Card>
           <CardHeader>
-            <CardTitle>Exam performance</CardTitle>
+            <CardTitle>{t('reports.examPerformance')}</CardTitle>
           </CardHeader>
           <CardContent className="h-72">
             {examChartData.length === 0 ? (
               <p className="text-sm text-muted-foreground">
-                No exam results yet.
+                {t('reports.noExamResults')}
               </p>
             ) : (
               <ResponsiveContainer width="100%" height="100%">
@@ -200,9 +202,9 @@ export default function FullReportPage() {
                   <YAxis />
                   <Tooltip />
                   <Legend />
-                  <Bar dataKey="avg" fill="#3b82f6" name="Avg score" />
-                  <Bar dataKey="max" fill="#22c55e" name="Max" />
-                  <Bar dataKey="min" fill="#ef4444" name="Min" />
+                  <Bar dataKey="avg" fill="#3b82f6" name={t('reports.avg')} />
+                  <Bar dataKey="max" fill="#22c55e" name={t('reports.max')} />
+                  <Bar dataKey="min" fill="#ef4444" name={t('reports.min')} />
                 </BarChart>
               </ResponsiveContainer>
             )}
@@ -212,19 +214,19 @@ export default function FullReportPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Survey feedback</CardTitle>
+          <CardTitle>{t('reports.surveyFeedback')}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-2 text-sm">
           {report.survey.responseCount === 0 ? (
-            <p className="text-muted-foreground">No survey responses yet.</p>
+            <p className="text-muted-foreground">{t('reports.noSurvey')}</p>
           ) : (
             <>
               <p>
-                <span className="text-muted-foreground">Responses:</span>{' '}
+                <span className="text-muted-foreground">{t('reports.responses')}:</span>{' '}
                 {report.survey.responseCount}
               </p>
               <p>
-                <span className="text-muted-foreground">Average rating:</span>{' '}
+                <span className="text-muted-foreground">{t('reports.averageRating')}:</span>{' '}
                 <span className="text-lg font-semibold">
                   {report.survey.averageRating?.toFixed(2)} / 5
                 </span>

@@ -6,6 +6,7 @@ import { Dialog } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select } from '@/components/ui/select';
+import { useT } from '@/i18n/provider';
 import { api } from '@/lib/api';
 import type { Exam, ExamType } from '@/lib/types';
 
@@ -17,6 +18,7 @@ interface Props {
 }
 
 export function CreateExamDialog({ open, courseId, onClose, onCreated }: Props) {
+  const t = useT();
   const [examName, setExamName] = useState('');
   const [examDate, setExamDate] = useState('');
   const [totalMarks, setTotalMarks] = useState(100);
@@ -66,12 +68,12 @@ export function CreateExamDialog({ open, courseId, onClose, onCreated }: Props) 
           onClose();
         }
       }}
-      title="New exam"
+      title={t('exam.newExam').replace('+ ', '')}
       description="Add the exam first, then add questions on the next screen."
     >
       <form onSubmit={onSubmit} className="space-y-4">
         <div className="space-y-2">
-          <Label htmlFor="examName">Exam name *</Label>
+          <Label htmlFor="examName">{t('exam.examName')} *</Label>
           <Input
             id="examName"
             value={examName}
@@ -83,7 +85,7 @@ export function CreateExamDialog({ open, courseId, onClose, onCreated }: Props) 
 
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-2">
-            <Label htmlFor="examDate">Exam date *</Label>
+            <Label htmlFor="examDate">{t('exam.examDate')} *</Label>
             <Input
               id="examDate"
               type="date"
@@ -93,7 +95,7 @@ export function CreateExamDialog({ open, courseId, onClose, onCreated }: Props) 
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="totalMarks">Total marks *</Label>
+            <Label htmlFor="totalMarks">{t('exam.totalMarks')} *</Label>
             <Input
               id="totalMarks"
               type="number"
@@ -106,20 +108,20 @@ export function CreateExamDialog({ open, courseId, onClose, onCreated }: Props) 
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="examType">Type *</Label>
+          <Label htmlFor="examType">{t('exam.type')} *</Label>
           <Select
             id="examType"
             value={examType}
             onChange={(e) => setExamType(e.target.value as ExamType)}
             required
           >
-            <option value="MULTIPLE_CHOICE">Multiple choice (auto-graded)</option>
-            <option value="FREE_TEXT">Free text (manually graded)</option>
+            <option value="MULTIPLE_CHOICE">{t('exam.mcq')}</option>
+            <option value="FREE_TEXT">{t('exam.freeText')}</option>
           </Select>
           <p className="text-xs text-muted-foreground">
             {examType === 'MULTIPLE_CHOICE'
-              ? 'Each question has 4 options + correct answer. Students get scored automatically on submit.'
-              : 'Students type their answers. Trainer reviews and assigns the final mark per student.'}
+              ? t('exam.mcqDesc')
+              : t('exam.freeTextDesc')}
           </p>
         </div>
 
@@ -139,10 +141,10 @@ export function CreateExamDialog({ open, courseId, onClose, onCreated }: Props) 
             }}
             disabled={submitting}
           >
-            Cancel
+            {t('common.cancel')}
           </Button>
           <Button type="submit" disabled={submitting}>
-            {submitting ? 'Creating…' : 'Create exam'}
+            {submitting ? t('common.creating') : t('exam.newExam').replace('+ ', '')}
           </Button>
         </div>
       </form>
