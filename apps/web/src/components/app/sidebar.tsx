@@ -2,6 +2,7 @@
 
 import {
   Building2,
+  Calendar,
   ChevronLeft,
   ChevronRight,
   ClipboardList,
@@ -9,7 +10,10 @@ import {
   GraduationCap,
   LayoutDashboard,
   LogOut,
+  Settings,
   Shield,
+  Sparkles,
+  TrendingUp,
   UserCog,
   Users,
   type LucideIcon,
@@ -32,58 +36,34 @@ interface NavItem {
   labelKey: keyof Messages['nav'];
   icon: LucideIcon;
   roles: Role[];
+  countKey?: 'students' | 'trainers' | 'clients' | 'admins' | 'coordinators';
+  group: 'overview' | 'people' | 'library';
 }
 
 const NAV: NavItem[] = [
-  {
-    href: '/dashboard',
-    labelKey: 'dashboard',
-    icon: LayoutDashboard,
-    roles: ['SUPER_ADMIN', 'ADMIN', 'COORDINATOR', 'TRAINER', 'STUDENT', 'CLIENT'],
-  },
-  {
-    href: '/courses',
-    labelKey: 'courses',
-    icon: GraduationCap,
-    roles: ['SUPER_ADMIN', 'ADMIN', 'COORDINATOR', 'TRAINER', 'STUDENT', 'CLIENT'],
-  },
-  {
-    href: '/students',
-    labelKey: 'students',
-    icon: Users,
-    roles: ['SUPER_ADMIN', 'ADMIN', 'COORDINATOR', 'CLIENT'],
-  },
-  {
-    href: '/trainers',
-    labelKey: 'trainers',
-    icon: UserCog,
-    roles: ['SUPER_ADMIN', 'ADMIN'],
-  },
-  {
-    href: '/coordinators',
-    labelKey: 'coordinators',
-    icon: ClipboardList,
-    roles: ['SUPER_ADMIN', 'ADMIN'],
-  },
-  {
-    href: '/clients',
-    labelKey: 'clients',
-    icon: Building2,
-    roles: ['SUPER_ADMIN', 'ADMIN'],
-  },
-  {
-    href: '/admins',
-    labelKey: 'admins',
-    icon: Shield,
-    roles: ['SUPER_ADMIN'],
-  },
-  {
-    href: '/templates',
-    labelKey: 'templates',
-    icon: FileText,
-    roles: ['SUPER_ADMIN', 'ADMIN', 'COORDINATOR'],
-  },
+  { href: '/dashboard', labelKey: 'dashboard', icon: LayoutDashboard, group: 'overview',
+    roles: ['SUPER_ADMIN', 'ADMIN', 'COORDINATOR', 'TRAINER', 'STUDENT', 'CLIENT'] },
+  { href: '/courses', labelKey: 'courses', icon: GraduationCap, group: 'overview',
+    roles: ['SUPER_ADMIN', 'ADMIN', 'COORDINATOR', 'TRAINER', 'STUDENT', 'CLIENT'] },
+  { href: '/students', labelKey: 'students', icon: Users, countKey: 'students', group: 'people',
+    roles: ['SUPER_ADMIN', 'ADMIN', 'COORDINATOR', 'CLIENT'] },
+  { href: '/trainers', labelKey: 'trainers', icon: UserCog, countKey: 'trainers', group: 'people',
+    roles: ['SUPER_ADMIN', 'ADMIN'] },
+  { href: '/coordinators', labelKey: 'coordinators', icon: ClipboardList, countKey: 'coordinators', group: 'people',
+    roles: ['SUPER_ADMIN', 'ADMIN'] },
+  { href: '/clients', labelKey: 'clients', icon: Building2, countKey: 'clients', group: 'people',
+    roles: ['SUPER_ADMIN', 'ADMIN'] },
+  { href: '/admins', labelKey: 'admins', icon: Shield, countKey: 'admins', group: 'people',
+    roles: ['SUPER_ADMIN'] },
+  { href: '/templates', labelKey: 'templates', icon: FileText, group: 'library',
+    roles: ['SUPER_ADMIN', 'ADMIN', 'COORDINATOR'] },
 ];
+
+const GROUP_LABELS: Record<NavItem['group'], string> = {
+  overview: 'Overview',
+  people: 'People',
+  library: 'Library',
+};
 
 const STORAGE_KEY = 'sel_sidebar_collapsed';
 
@@ -94,6 +74,7 @@ export function Sidebar() {
   const t = useT();
   const [collapsed, setCollapsed] = useState(false);
   const [hydrated, setHydrated] = useState(false);
+  const [counts, setCounts] = useState<Partial<Record<NonNullable<NavItem['countKey']>, number>>>({});
 
   useEffect(() => {
     const saved = localStorage.getItem(STORAGE_KEY);
@@ -102,26 +83,39 @@ export function Sidebar() {
   }, []);
 
   useEffect(() => {
-    if (hydrated) {
-      localStorage.setItem(STORAGE_KEY, collapsed ? '1' : '0');
-    }
+    if (hydrated) localStorage.setItem(STORAGE_KEY, collapsed ? '1' : '0');
   }, [collapsed, hydrated]);
+
+  // Pull counts from /api/dashboard
+  useEffect(() => {
+    if (!user) return;
+    void (async () => {
+      try {
+        const { api } = await import('@/lib/api');
+        type Stats = Record<string, number | string | undefined>;
+        const stats = await api<Stats>('/dashboard');
+        setCounts({
+          students: Number(stats.students ?? 0),
+          trainers: Number(stats.trainers ?? 0),
+          coordinators: Number(stats.coordinators ?? 0),
+          admins: Number(stats.admins ?? 0),
+          clients: Number(stats.clients ?? 0),
+        });
+      } catch {
+        // ignore — sidebar will simply not show counts
+      }
+    })();
+  }, [user]);
 
   if (!user) return null;
   const items = NAV.filter((n) => n.roles.includes(user.role));
-
-  // Toggle sits at the OUTSIDE edge — opposite the wall.
-  // LTR: wall on left → toggle on right edge (-end-3 = -right-3)
-  // RTL: wall on right → toggle on left edge (-end-3 = -left-3)
-  // Use logical class so it flips automatically.
   const isRtl = dir === 'rtl';
-
-  // Pick chevron icon based on direction + collapsed state
-  // When expanded: arrow points "toward wall" (collapse direction)
-  // LTR: collapse → arrow points left;   RTL: collapse → arrow points right
-  // When collapsed: arrow points "away from wall" (expand direction)
   const collapseIcon = isRtl ? <ChevronRight className="h-3.5 w-3.5" /> : <ChevronLeft className="h-3.5 w-3.5" />;
   const expandIcon = isRtl ? <ChevronLeft className="h-3.5 w-3.5" /> : <ChevronRight className="h-3.5 w-3.5" />;
+
+  // Group items by section
+  const grouped: Record<NavItem['group'], NavItem[]> = { overview: [], people: [], library: [] };
+  for (const item of items) grouped[item.group].push(item);
 
   return (
     <aside
@@ -145,9 +139,9 @@ export function Sidebar() {
         {collapsed ? expandIcon : collapseIcon}
       </button>
 
-      {/* Brand: logo + name + tagline */}
+      {/* Brand */}
       {!collapsed ? (
-        <div className="mb-6 flex items-center gap-3">
+        <div className="mb-5 flex items-center gap-3">
           <LearnovaMark size={36} />
           <div className="leading-tight">
             <p className="text-base font-bold tracking-tight">{t('app.name')}</p>
@@ -155,58 +149,105 @@ export function Sidebar() {
           </div>
         </div>
       ) : (
-        <div className="mb-6 flex items-center justify-center" title={`${t('app.name')} · ${t('app.tagline')}`}>
+        <div className="mb-5 flex items-center justify-center">
           <LearnovaMark size={28} />
         </div>
       )}
 
-      {/* Workspace / user pill */}
-      {!collapsed && (
-        <div className="mb-5 rounded-2xl border border-border/60 bg-background/60 p-3">
-          <div className="flex items-center gap-2.5">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-brand-soft text-sm font-bold text-primary">
-              {user.email.charAt(0).toUpperCase()}
-            </div>
-            <div className="min-w-0 flex-1 leading-tight">
-              <p className="truncate text-sm font-semibold">{user.email.split('@')[0]}</p>
-              <p className="truncate text-[11px] text-muted-foreground">{user.role}</p>
-            </div>
+      {/* Workspace selector */}
+      {!collapsed ? (
+        <button className="mb-5 flex w-full items-center gap-2.5 rounded-2xl border border-border/60 bg-background/60 p-3 text-left transition-colors hover:bg-secondary">
+          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-brand-soft text-sm font-bold text-primary">
+            {user.email.charAt(0).toUpperCase()}
           </div>
-        </div>
-      )}
+          <div className="min-w-0 flex-1 leading-tight">
+            <p className="truncate text-sm font-semibold">
+              {user.email.split('@')[0].charAt(0).toUpperCase() + user.email.split('@')[0].slice(1)}
+            </p>
+            <p className="truncate text-[11px] text-muted-foreground">{user.role}</p>
+          </div>
+          <ChevronRight className={cn('h-4 w-4 text-muted-foreground', isRtl && 'rotate-180')} />
+        </button>
+      ) : null}
 
-      {!collapsed && (
-        <p className="mb-2 px-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-          {t('nav.dashboard')}
-        </p>
-      )}
-
-      <nav className="flex-1 space-y-1">
-        {items.map((item) => {
-          const active = pathname === item.href || pathname.startsWith(item.href + '/');
-          const Icon = item.icon;
-          const label = t(`nav.${item.labelKey}`);
+      {/* Nav groups */}
+      <nav className="flex-1 space-y-5 overflow-y-auto">
+        {(Object.keys(grouped) as NavItem['group'][]).map((group) => {
+          const list = grouped[group];
+          if (list.length === 0) return null;
           return (
-            <Link
-              key={item.href}
-              href={item.href}
-              title={collapsed ? label : undefined}
-              className={cn(
-                'flex items-center gap-3 rounded-xl text-sm font-medium transition-all duration-200',
-                collapsed ? 'h-10 w-full justify-center' : 'px-3 py-2.5',
-                active
-                  ? 'bg-accent text-accent-foreground shadow-brand-sm'
-                  : 'text-muted-foreground hover:bg-secondary hover:text-foreground',
+            <div key={group} className="space-y-1">
+              {!collapsed && (
+                <p className="px-2 pb-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                  {GROUP_LABELS[group]}
+                </p>
               )}
-            >
-              <Icon className="h-[18px] w-[18px] shrink-0" />
-              {!collapsed && <span className="truncate">{label}</span>}
-            </Link>
+              {list.map((item) => {
+                const active = pathname === item.href || pathname.startsWith(item.href + '/');
+                const Icon = item.icon;
+                const label = t(`nav.${item.labelKey}`);
+                const count = item.countKey ? counts[item.countKey] : undefined;
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    title={collapsed ? label : undefined}
+                    className={cn(
+                      'group flex items-center gap-3 rounded-xl text-sm font-medium transition-all duration-200',
+                      collapsed ? 'h-10 w-full justify-center' : 'px-3 py-2.5',
+                      active
+                        ? 'bg-accent text-accent-foreground shadow-brand-sm'
+                        : 'text-muted-foreground hover:bg-secondary hover:text-foreground',
+                    )}
+                  >
+                    <Icon className="h-[18px] w-[18px] shrink-0" />
+                    {!collapsed && (
+                      <>
+                        <span className="flex-1 truncate">{label}</span>
+                        {typeof count === 'number' && (
+                          <span
+                            className={cn(
+                              'rounded-md px-1.5 py-0.5 text-[10px] font-semibold tabular-nums',
+                              active
+                                ? 'bg-white/60 text-primary'
+                                : 'bg-secondary text-muted-foreground group-hover:bg-card',
+                            )}
+                          >
+                            {count}
+                          </span>
+                        )}
+                      </>
+                    )}
+                  </Link>
+                );
+              })}
+            </div>
           );
         })}
       </nav>
 
-      <div className={cn('space-y-2 pt-4', collapsed && 'flex flex-col items-center')}>
+      {/* Pro tip card — bottom of sidebar, gradient */}
+      {!collapsed && (
+        <div className="my-4 overflow-hidden rounded-2xl bg-gradient-brand p-4 text-white shadow-brand-md">
+          <div className="mb-2 flex items-center gap-1.5">
+            <Sparkles className="h-3.5 w-3.5" />
+            <p className="text-xs font-semibold uppercase tracking-wider">Pro tip</p>
+          </div>
+          <p className="text-sm leading-snug">
+            Set learning goals for your cohort and track impact.
+          </p>
+          <Link href="/courses">
+            <button className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-white/15 px-3 py-1.5 text-xs font-semibold backdrop-blur transition hover:bg-white/25">
+              <TrendingUp className="h-3.5 w-3.5" />
+              Set goals
+              <ChevronRight className={cn('h-3.5 w-3.5', isRtl && 'rotate-180')} />
+            </button>
+          </Link>
+        </div>
+      )}
+
+      {/* Footer toggles */}
+      <div className={cn('space-y-2', collapsed && 'flex flex-col items-center')}>
         <LangToggle compact={collapsed} />
         <ThemeToggle compact={collapsed} />
         {collapsed ? (
@@ -221,12 +262,7 @@ export function Sidebar() {
             <LogOut className="h-4 w-4" />
           </Button>
         ) : (
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => void logout()}
-            className="w-full"
-          >
+          <Button variant="outline" size="sm" onClick={() => void logout()} className="w-full">
             {t('auth.signOut')}
           </Button>
         )}

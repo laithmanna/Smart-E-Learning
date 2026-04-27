@@ -3,6 +3,7 @@
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Sidebar } from '@/components/app/sidebar';
+import { Topbar } from '@/components/app/topbar';
 import { useAuth } from '@/hooks/use-auth';
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
@@ -22,9 +23,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   }
 
   return (
-    <div className="flex h-screen overflow-hidden">
+    <div className="flex h-screen overflow-hidden bg-background">
       <Sidebar />
-      <main className="flex-1 overflow-y-auto p-8">{children}</main>
+      <div className="flex flex-1 flex-col overflow-hidden">
+        <Topbar />
+        <main className="flex-1 overflow-y-auto px-6 py-6 lg:px-8">{children}</main>
+      </div>
     </div>
   );
 }
