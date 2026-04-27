@@ -152,7 +152,10 @@ export function Sidebar() {
 
       {/* Workspace selector */}
       {!collapsed ? (
-        <button className="mb-5 flex w-full items-center gap-2.5 rounded-2xl border border-border/60 bg-background/60 p-3 text-left transition-colors hover:bg-secondary">
+        <Link
+          href="/profile"
+          className="mb-5 flex w-full items-center gap-2.5 rounded-2xl border border-border/60 bg-background/60 p-3 text-left transition-colors hover:bg-secondary"
+        >
           <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-brand-soft text-sm font-bold text-primary">
             {user.email.charAt(0).toUpperCase()}
           </div>
@@ -163,8 +166,16 @@ export function Sidebar() {
             <p className="truncate text-[11px] text-muted-foreground">{user.role}</p>
           </div>
           <ChevronRight className={cn('h-4 w-4 text-muted-foreground', isRtl && 'rotate-180')} />
-        </button>
-      ) : null}
+        </Link>
+      ) : (
+        <Link
+          href="/profile"
+          title={`${user.email} · ${user.role}`}
+          className="mb-5 flex h-9 w-full items-center justify-center rounded-xl bg-gradient-brand-soft text-sm font-bold text-primary transition hover:opacity-80"
+        >
+          {user.email.charAt(0).toUpperCase()}
+        </Link>
+      )}
 
       {/* Nav groups */}
       <nav className="flex-1 space-y-5 overflow-y-auto">
