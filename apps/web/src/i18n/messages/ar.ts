@@ -2,8 +2,8 @@ import type { Messages } from './en';
 
 export const ar: Messages = {
   app: {
-    name: 'سمارت للتعلم الإلكتروني',
-    tagline: 'نظام إدارة التدريب المؤسسي',
+    name: 'Learnova',
+    tagline: 'منصة التعلم الذكية',
   },
   nav: {
     dashboard: 'لوحة التحكم',

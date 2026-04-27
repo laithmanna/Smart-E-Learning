@@ -4,45 +4,67 @@
 
 @layer base {
   :root {
-    /* Soft cool-gray page background, white cards — easier on the eyes */
-    --background: 210 20% 96%;
-    --foreground: 222 47% 11%;
+    /* === Learnova design system === */
+    /* Soft tinted page bg: #F7F8FC */
+    --background: 225 33% 98%;
+    /* Text primary: #1F2937 */
+    --foreground: 220 18% 17%;
+
+    /* Cards: pure white surface */
     --card: 0 0% 100%;
-    --card-foreground: 222 47% 11%;
-    --primary: 222 47% 11%;
-    --primary-foreground: 210 40% 98%;
-    --secondary: 210 30% 92%;
-    --secondary-foreground: 222 47% 11%;
-    --muted: 210 25% 93%;
-    --muted-foreground: 215 16% 42%;
-    --accent: 210 30% 92%;
-    --accent-foreground: 222 47% 11%;
-    --destructive: 0 75% 55%;
+    --card-foreground: 220 18% 17%;
+
+    /* Primary: #6D5DF6 (purple) */
+    --primary: 247 88% 66%;
+    --primary-foreground: 0 0% 100%;
+
+    /* Secondary: #F1F3F9 — used for pill bgs / search */
+    --secondary: 225 30% 95%;
+    --secondary-foreground: 220 18% 25%;
+
+    /* Muted: same family */
+    --muted: 225 30% 96%;
+    --muted-foreground: 220 9% 46%;
+
+    /* Accent: very light purple — for hover states, active sidebar bg */
+    --accent: 247 100% 97%;
+    --accent-foreground: 247 88% 60%;
+
+    --destructive: 0 84% 71%;
     --destructive-foreground: 0 0% 100%;
-    --border: 215 20% 86%;
-    --input: 215 20% 86%;
-    --ring: 222 47% 35%;
-    --radius: 0.5rem;
+
+    /* Border: #E6E8F0 */
+    --border: 226 21% 92%;
+    --input: 226 21% 92%;
+    --ring: 247 88% 66%;
+
+    --radius: 0.75rem;
+
+    /* Brand colors used in gradients/shadows */
+    --brand-purple: 247 88% 66%;     /* #6D5DF6 */
+    --brand-purple-soft: 247 100% 86%; /* #B3A8FF */
+    --brand-blue: 213 94% 68%;       /* #60A5FA */
+    --brand-blue-soft: 213 100% 87%; /* #BFDBFE */
   }
 
   .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
-    --primary: 210 40% 98%;
-    --primary-foreground: 222.2 47.4% 11.2%;
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 212.7 26.8% 83.9%;
+    --background: 230 22% 10%;
+    --foreground: 0 0% 98%;
+    --card: 230 18% 14%;
+    --card-foreground: 0 0% 98%;
+    --primary: 247 88% 70%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 230 18% 18%;
+    --secondary-foreground: 0 0% 95%;
+    --muted: 230 18% 18%;
+    --muted-foreground: 220 10% 65%;
+    --accent: 247 50% 22%;
+    --accent-foreground: 247 100% 80%;
+    --destructive: 0 70% 60%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 230 16% 22%;
+    --input: 230 16% 22%;
+    --ring: 247 88% 70%;
   }
 }
 
@@ -52,6 +74,39 @@
   }
   body {
     @apply bg-background text-foreground;
+    font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+  }
+}
+
+@layer components {
+  /* Brand gradient utilities */
+  .bg-gradient-brand {
+    background: linear-gradient(135deg, #6D5DF6 0%, #60A5FA 100%);
+  }
+  .bg-gradient-brand-soft {
+    background: linear-gradient(
+      135deg,
+      rgba(109, 93, 246, 0.10) 0%,
+      rgba(96, 165, 250, 0.10) 100%
+    );
+  }
+  .text-gradient-brand {
+    background: linear-gradient(135deg, #6D5DF6 0%, #60A5FA 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    color: transparent;
+  }
+
+  /* Tinted shadows */
+  .shadow-brand-sm {
+    box-shadow: 0 2px 8px rgba(109, 93, 246, 0.05);
+  }
+  .shadow-brand-md {
+    box-shadow: 0 8px 24px rgba(109, 93, 246, 0.08);
+  }
+  .shadow-brand-lg {
+    box-shadow: 0 16px 40px rgba(109, 93, 246, 0.12);
   }
 }
 

@@ -18,6 +18,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { LangToggle } from '@/components/app/lang-toggle';
+import { LearnovaMark } from '@/components/app/logo';
 import { ThemeToggle } from '@/components/app/theme-toggle';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/use-auth';
@@ -126,18 +127,17 @@ export function Sidebar() {
     <aside
       className={cn(
         'relative flex h-screen shrink-0 flex-col bg-card transition-[width] duration-200 ease-out',
-        // Border on the inner edge (toward main content)
-        isRtl ? 'border-l' : 'border-r',
-        collapsed ? 'w-16 px-2 py-4' : 'w-60 p-4',
+        isRtl ? 'border-l border-border/60' : 'border-r border-border/60',
+        collapsed ? 'w-16 px-2 py-5' : 'w-[260px] p-5',
       )}
     >
       <button
         onClick={() => setCollapsed((v) => !v)}
-        aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-        title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+        aria-label={collapsed ? t('sidebar.expand') : t('sidebar.collapse')}
+        title={collapsed ? t('sidebar.expand') : t('sidebar.collapse')}
         className={cn(
-          'absolute top-6 z-10 flex h-6 w-6 items-center justify-center',
-          'rounded-full border bg-card shadow-sm hover:bg-accent',
+          'absolute top-7 z-10 flex h-6 w-6 items-center justify-center',
+          'rounded-full border border-border/60 bg-card shadow-brand-sm hover:bg-accent',
           'transition-colors',
           isRtl ? '-left-3' : '-right-3',
         )}
@@ -145,22 +145,40 @@ export function Sidebar() {
         {collapsed ? expandIcon : collapseIcon}
       </button>
 
-      {/* Brand / user */}
+      {/* Brand: logo + name + tagline */}
       {!collapsed ? (
-        <div className="mb-6">
-          <p className="font-semibold">{t('app.name')}</p>
-          <p className="truncate text-xs text-muted-foreground">{user.email}</p>
-          <p className="mt-1 inline-block rounded-full bg-secondary px-2 py-0.5 text-xs">
-            {user.role}
-          </p>
+        <div className="mb-6 flex items-center gap-3">
+          <LearnovaMark size={36} />
+          <div className="leading-tight">
+            <p className="text-base font-bold tracking-tight">{t('app.name')}</p>
+            <p className="text-xs text-muted-foreground">{t('app.tagline')}</p>
+          </div>
         </div>
       ) : (
-        <div
-          className="mb-6 flex h-9 w-full items-center justify-center rounded-md bg-secondary text-sm font-bold"
-          title={`${user.email} · ${user.role}`}
-        >
-          {user.email.charAt(0).toUpperCase()}
+        <div className="mb-6 flex items-center justify-center" title={`${t('app.name')} · ${t('app.tagline')}`}>
+          <LearnovaMark size={28} />
         </div>
+      )}
+
+      {/* Workspace / user pill */}
+      {!collapsed && (
+        <div className="mb-5 rounded-2xl border border-border/60 bg-background/60 p-3">
+          <div className="flex items-center gap-2.5">
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-brand-soft text-sm font-bold text-primary">
+              {user.email.charAt(0).toUpperCase()}
+            </div>
+            <div className="min-w-0 flex-1 leading-tight">
+              <p className="truncate text-sm font-semibold">{user.email.split('@')[0]}</p>
+              <p className="truncate text-[11px] text-muted-foreground">{user.role}</p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {!collapsed && (
+        <p className="mb-2 px-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+          {t('nav.dashboard')}
+        </p>
       )}
 
       <nav className="flex-1 space-y-1">
@@ -174,21 +192,21 @@ export function Sidebar() {
               href={item.href}
               title={collapsed ? label : undefined}
               className={cn(
-                'flex items-center gap-3 rounded-md text-sm transition-colors',
-                collapsed ? 'h-10 w-full justify-center' : 'px-3 py-2',
+                'flex items-center gap-3 rounded-xl text-sm font-medium transition-all duration-200',
+                collapsed ? 'h-10 w-full justify-center' : 'px-3 py-2.5',
                 active
-                  ? 'bg-primary text-primary-foreground'
-                  : 'text-foreground hover:bg-accent hover:text-accent-foreground',
+                  ? 'bg-accent text-accent-foreground shadow-brand-sm'
+                  : 'text-muted-foreground hover:bg-secondary hover:text-foreground',
               )}
             >
-              <Icon className="h-4 w-4 shrink-0" />
+              <Icon className="h-[18px] w-[18px] shrink-0" />
               {!collapsed && <span className="truncate">{label}</span>}
             </Link>
           );
         })}
       </nav>
 
-      <div className={cn('space-y-2', collapsed && 'flex flex-col items-center')}>
+      <div className={cn('space-y-2 pt-4', collapsed && 'flex flex-col items-center')}>
         <LangToggle compact={collapsed} />
         <ThemeToggle compact={collapsed} />
         {collapsed ? (

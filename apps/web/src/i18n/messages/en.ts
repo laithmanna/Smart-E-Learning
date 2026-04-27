@@ -1,7 +1,7 @@
 export const en = {
   app: {
-    name: 'Smart E-Learning',
-    tagline: 'Corporate training LMS',
+    name: 'Learnova',
+    tagline: 'Smart E-Learning',
   },
   nav: {
     dashboard: 'Dashboard',
