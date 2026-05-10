@@ -35,7 +35,7 @@ services:
     rootDir: .
     healthCheckPath: /docs
     buildCommand: |
-      npm install -g pnpm@9.15.4
+      npm install -g --force pnpm@9.15.4
       pnpm install --frozen-lockfile --prod=false
       pnpm --filter @sel/api exec prisma generate
       pnpm --filter @sel/api build
@@ -78,7 +78,7 @@ services:
     region: frankfurt
     rootDir: .
     buildCommand: |
-      npm install -g pnpm@9.15.4
+      npm install -g --force pnpm@9.15.4
       pnpm install --frozen-lockfile --prod=false
       pnpm --filter @sel/web build
     startCommand: pnpm --filter @sel/web start
