@@ -37,7 +37,7 @@ services:
     buildCommand: |
       corepack enable
       corepack prepare pnpm@9.5.0 --activate
-      pnpm install --frozen-lockfile
+      pnpm install --frozen-lockfile --prod=false
       pnpm --filter @sel/api exec prisma generate
       pnpm --filter @sel/api build
     preDeployCommand: |
@@ -85,7 +85,7 @@ services:
     buildCommand: |
       corepack enable
       corepack prepare pnpm@9.5.0 --activate
-      pnpm install --frozen-lockfile
+      pnpm install --frozen-lockfile --prod=false
       pnpm --filter @sel/web build
     startCommand: pnpm --filter @sel/web start
     envVars:
