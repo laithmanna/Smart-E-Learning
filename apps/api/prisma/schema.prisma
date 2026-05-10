@@ -29,6 +29,14 @@ enum Gender {
   OTHER
 }
 
+enum AttachmentCategory {
+  MATERIAL
+  TOPICS
+  PRESENTATION
+  CERTIFICATE
+  OTHER
+}
+
 // ---------- USERS / AUTH ----------
 
 model User {
@@ -187,9 +195,12 @@ model Class {
 }
 
 model Enrollment {
-  courseId  String
-  studentId String
-  createdAt DateTime @default(now())
+  courseId            String
+  studentId           String
+  certificateFileName String?
+  certificateFilePath String?
+  certificateUploadedAt DateTime?
+  createdAt           DateTime @default(now())
 
   course  Course  @relation(fields: [courseId], references: [id], onDelete: Cascade)
   student Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
@@ -215,15 +226,17 @@ model Attendance {
 }
 
 model CourseAttachment {
-  id         String   @id @default(cuid())
+  id         String             @id @default(cuid())
   courseId   String
+  category   AttachmentCategory @default(OTHER)
   fileName   String
   filePath   String
-  uploadedAt DateTime @default(now())
+  uploadedAt DateTime           @default(now())
 
   course Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
 
   @@index([courseId])
+  @@index([category])
 }
 
 // ---------- EXAMS ----------

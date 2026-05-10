@@ -50,12 +50,52 @@ export interface CourseClass {
   meetingLink: string | null;
 }
 
+export type AttachmentCategory =
+  | 'MATERIAL'
+  | 'TOPICS'
+  | 'PRESENTATION'
+  | 'CERTIFICATE'
+  | 'OTHER';
+
 export interface CourseAttachment {
   id: string;
   courseId: string;
+  category: AttachmentCategory;
   fileName: string;
   filePath: string;
   uploadedAt: string;
+}
+
+/** Hub-list row: attachment + course context for the global Attachments pages. */
+export interface CourseAttachmentWithCourse extends CourseAttachment {
+  course: {
+    id: string;
+    courseName: string;
+    startDate: string;
+    endDate: string;
+    trainer: { id: string; name: string } | null;
+  };
+}
+
+/** Hub-list row for student certificates. */
+export interface StudentCertificateRow {
+  courseId: string;
+  studentId: string;
+  certificateFileName: string;
+  certificateFilePath: string;
+  certificateUploadedAt: string;
+  student: {
+    id: string;
+    name: string;
+    user: { id: string; email: string; isActive: boolean };
+  };
+  course: {
+    id: string;
+    courseName: string;
+    startDate: string;
+    endDate: string;
+    trainer: { id: string; name: string } | null;
+  };
 }
 
 export interface CourseDetail extends Course {
@@ -67,6 +107,9 @@ export interface EnrollmentRow {
   courseId: string;
   studentId: string;
   createdAt: string;
+  certificateFileName: string | null;
+  certificateFilePath: string | null;
+  certificateUploadedAt: string | null;
   student: {
     id: string;
     name: string;

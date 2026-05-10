@@ -11,6 +11,7 @@ import { useT } from '@/i18n/provider';
 import { api } from '@/lib/api';
 import { cn, uploadUrl } from '@/lib/utils';
 import type {
+  AttachmentCategory,
   CourseAttachment,
   CourseClass,
   CourseDetail,
@@ -74,12 +75,13 @@ export default function CourseDetailPage() {
       .catch(() => {});
   }
 
-  async function uploadAttachment(file: File) {
+  async function uploadAttachment(file: File, category: AttachmentCategory) {
     if (!course) return;
     setUploadBusy(true);
     setUploadError(null);
     const fd = new FormData();
     fd.append('file', file);
+    fd.append('category', category);
     try {
       const created = await api<CourseAttachment>(
         `/courses/${course.id}/attachments`,
@@ -92,6 +94,38 @@ export default function CourseDetailPage() {
       setUploadError(err instanceof Error ? err.message : 'Upload failed');
     } finally {
       setUploadBusy(false);
+    }
+  }
+
+  async function uploadStudentCertificate(studentId: string, file: File) {
+    if (!course) return;
+    const fd = new FormData();
+    fd.append('file', file);
+    try {
+      const updated = await api<EnrollmentRow>(
+        `/enrollments/${course.id}/${studentId}/certificate`,
+        { method: 'POST', body: fd },
+      );
+      setStudents((prev) =>
+        prev ? prev.map((r) => (r.studentId === studentId ? updated : r)) : prev,
+      );
+    } catch (err) {
+      setUploadError(err instanceof Error ? err.message : 'Upload failed');
+    }
+  }
+
+  async function deleteStudentCertificate(studentId: string) {
+    if (!course) return;
+    try {
+      const updated = await api<EnrollmentRow>(
+        `/enrollments/${course.id}/${studentId}/certificate`,
+        { method: 'DELETE' },
+      );
+      setStudents((prev) =>
+        prev ? prev.map((r) => (r.studentId === studentId ? updated : r)) : prev,
+      );
+    } catch (err) {
+      setUploadError(err instanceof Error ? err.message : 'Delete failed');
     }
   }
 
@@ -313,7 +347,12 @@ export default function CourseDetailPage() {
         <StudentsSection
           rows={students}
           canEnroll={!!canManage && !course.isClosed}
+          canManageCert={!!canEditClass}
           onEnroll={() => setEnrollOpen(true)}
+          onUploadCert={(studentId, file) =>
+            void uploadStudentCertificate(studentId, file)
+          }
+          onDeleteCert={(studentId) => void deleteStudentCertificate(studentId)}
         />
       )}
       {tab === 'exams' && (
@@ -342,7 +381,7 @@ export default function CourseDetailPage() {
           canManage={!!canEditClass && !course.isClosed}
           uploading={uploadBusy}
           error={uploadError}
-          onUpload={(file) => void uploadAttachment(file)}
+          onUpload={(file, cat) => void uploadAttachment(file, cat)}
           onDelete={(a) => setDeletingAttachment({ id: a.id, fileName: a.fileName })}
         />
       )}
@@ -581,13 +620,21 @@ function ClassesTable({
 function StudentsSection({
   rows,
   canEnroll,
+  canManageCert,
   onEnroll,
+  onUploadCert,
+  onDeleteCert,
 }: {
   rows: EnrollmentRow[] | null;
   canEnroll: boolean;
+  canManageCert: boolean;
   onEnroll: () => void;
+  onUploadCert: (studentId: string, file: File) => void;
+  onDeleteCert: (studentId: string) => void;
 }) {
   const t = useT();
+  const [confirmDelete, setConfirmDelete] = useState<EnrollmentRow | null>(null);
+
   return (
     <div className="space-y-3">
       {canEnroll && (
@@ -610,32 +657,145 @@ function StudentsSection({
                 <th className="p-3">{t('common.email')}</th>
                 <th className="p-3">{t('common.active')}</th>
                 <th className="p-3">{t('common.date')}</th>
+                <th className="p-3">{t('attachments.certificateCol')}</th>
               </tr>
             </thead>
             <tbody className="divide-y">
-              {rows.map((r) => (
-                <tr key={r.studentId}>
-                  <td className="p-3 font-medium">{r.student.name}</td>
-                  <td className="p-3 text-muted-foreground">{r.student.user.email}</td>
-                  <td className="p-3">
-                    {r.student.user.isActive ? (
-                      <span className="rounded-full bg-green-100 px-2 py-0.5 text-xs text-green-800 dark:bg-green-900/30 dark:text-green-300">
-                        {t('common.active')}
-                      </span>
-                    ) : (
-                      <span className="rounded-full bg-red-100 px-2 py-0.5 text-xs text-red-800 dark:bg-red-900/30 dark:text-red-300">
-                        {t('common.inactive')}
-                      </span>
-                    )}
-                  </td>
-                  <td className="p-3 text-muted-foreground">{fmtDate(r.createdAt)}</td>
-                </tr>
-              ))}
+              {rows.map((r) => {
+                const certUrl = r.certificateFilePath ? uploadUrl(r.certificateFilePath) : null;
+                return (
+                  <tr key={r.studentId}>
+                    <td className="p-3 font-medium">{r.student.name}</td>
+                    <td className="p-3 text-muted-foreground">{r.student.user.email}</td>
+                    <td className="p-3">
+                      {r.student.user.isActive ? (
+                        <span className="rounded-full bg-green-100 px-2 py-0.5 text-xs text-green-800 dark:bg-green-900/30 dark:text-green-300">
+                          {t('common.active')}
+                        </span>
+                      ) : (
+                        <span className="rounded-full bg-red-100 px-2 py-0.5 text-xs text-red-800 dark:bg-red-900/30 dark:text-red-300">
+                          {t('common.inactive')}
+                        </span>
+                      )}
+                    </td>
+                    <td className="p-3 text-muted-foreground">{fmtDate(r.createdAt)}</td>
+                    <td className="p-3">
+                      <CertificateCell
+                        row={r}
+                        certUrl={certUrl}
+                        canManage={canManageCert}
+                        onUpload={(file) => onUploadCert(r.studentId, file)}
+                        onAskDelete={() => setConfirmDelete(r)}
+                      />
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </Card>
       )}
+
+      <Dialog
+        open={!!confirmDelete}
+        onClose={() => setConfirmDelete(null)}
+        title={t('attachments.studentCertDeleteConfirm')}
+        description={
+          confirmDelete
+            ? t('attachments.studentCertDeleteDesc').replace(
+                '{name}',
+                confirmDelete.student.name,
+              )
+            : ''
+        }
+      >
+        <div className="flex justify-end gap-2">
+          <Button variant="outline" onClick={() => setConfirmDelete(null)}>
+            {t('common.cancel')}
+          </Button>
+          <Button
+            variant="destructive"
+            onClick={() => {
+              if (confirmDelete) onDeleteCert(confirmDelete.studentId);
+              setConfirmDelete(null);
+            }}
+          >
+            {t('common.delete')}
+          </Button>
+        </div>
+      </Dialog>
     </div>
+  );
+}
+
+function CertificateCell({
+  row,
+  certUrl,
+  canManage,
+  onUpload,
+  onAskDelete,
+}: {
+  row: EnrollmentRow;
+  certUrl: string | null | undefined;
+  canManage: boolean;
+  onUpload: (file: File) => void;
+  onAskDelete: () => void;
+}) {
+  const t = useT();
+  if (row.certificateFilePath && certUrl) {
+    return (
+      <div className="flex flex-wrap items-center gap-2">
+        <a
+          href={certUrl}
+          target="_blank"
+          rel="noreferrer"
+          className="text-primary underline"
+          title={row.certificateFileName ?? ''}
+        >
+          {t('common.download')}
+        </a>
+        {canManage && (
+          <>
+            <label className="inline-flex">
+              <input
+                type="file"
+                className="hidden"
+                onChange={(e) => {
+                  const f = e.target.files?.[0];
+                  if (f) onUpload(f);
+                  e.target.value = '';
+                }}
+              />
+              <span className="inline-flex h-7 cursor-pointer items-center rounded-md border border-border px-2 text-xs hover:bg-secondary">
+                {t('attachments.studentCertReplace')}
+              </span>
+            </label>
+            <Button size="sm" variant="destructive" onClick={onAskDelete}>
+              {t('common.delete')}
+            </Button>
+          </>
+        )}
+      </div>
+    );
+  }
+  if (!canManage) {
+    return <span className="text-xs text-muted-foreground">{t('attachments.studentCertNone')}</span>;
+  }
+  return (
+    <label className="inline-flex">
+      <input
+        type="file"
+        className="hidden"
+        onChange={(e) => {
+          const f = e.target.files?.[0];
+          if (f) onUpload(f);
+          e.target.value = '';
+        }}
+      />
+      <span className="inline-flex h-7 cursor-pointer items-center rounded-md bg-primary px-2 text-xs font-medium text-primary-foreground hover:bg-primary/90">
+        {t('attachments.studentCertUpload')}
+      </span>
+    </label>
   );
 }
 
@@ -832,93 +992,121 @@ function AttachmentsSection({
   canManage: boolean;
   uploading: boolean;
   error: string | null;
-  onUpload: (file: File) => void;
+  onUpload: (file: File, category: AttachmentCategory) => void;
   onDelete: (a: CourseAttachment) => void;
 }) {
   const t = useT();
-  return (
-    <div className="space-y-3">
-      {canManage && (
-        <Card className="border-dashed">
-          <CardContent className="flex flex-col gap-2 pt-6 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <p className="text-sm font-medium">{t('attachments.upload')}</p>
-              <p className="text-xs text-muted-foreground">
-                {t('attachments.uploadDesc')}
-              </p>
-            </div>
-            <label className="inline-flex">
-              <input
-                type="file"
-                className="hidden"
-                disabled={uploading}
-                onChange={(e) => {
-                  const f = e.target.files?.[0];
-                  if (f) onUpload(f);
-                  e.target.value = '';
-                }}
-              />
-              <span
-                className={
-                  'inline-flex h-9 cursor-pointer items-center justify-center rounded-md bg-primary px-3 text-sm font-medium text-primary-foreground hover:bg-primary/90 ' +
-                  (uploading ? 'pointer-events-none opacity-50' : '')
-                }
-              >
-                {uploading ? t('common.uploading') : t('attachments.chooseFile')}
-              </span>
-            </label>
-          </CardContent>
-        </Card>
-      )}
+  const groups: Array<{
+    cat: AttachmentCategory;
+    title: string;
+    description: string;
+    uploadCta: string;
+  }> = [
+    {
+      cat: 'MATERIAL',
+      title: t('attachments.catMaterial'),
+      description: t('attachments.catMaterialDesc'),
+      uploadCta: t('attachments.uploadMaterial'),
+    },
+    {
+      cat: 'TOPICS',
+      title: t('attachments.catTopics'),
+      description: t('attachments.catTopicsDesc'),
+      uploadCta: t('attachments.uploadTopics'),
+    },
+    {
+      cat: 'PRESENTATION',
+      title: t('attachments.catPresentation'),
+      description: t('attachments.catPresentationDesc'),
+      uploadCta: t('attachments.uploadPresentation'),
+    },
+  ];
 
+  return (
+    <div className="space-y-4">
       {error && (
         <p className="rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive">
           {error}
         </p>
       )}
 
-      {items.length === 0 ? (
-        <p className="text-sm text-muted-foreground">{t('attachments.none')}</p>
-      ) : (
-        <Card className="overflow-hidden">
-          <ul className="divide-y">
-            {items.map((a) => {
-              const url = uploadUrl(a.filePath);
-              return (
-                <li key={a.id} className="flex items-center justify-between p-3 text-sm">
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate font-medium">{a.fileName}</p>
-                    <p className="text-xs text-muted-foreground">
-                      {t('attachments.uploadedOn').replace('{date}', fmtDate(a.uploadedAt))}
-                    </p>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    {url && (
-                      <a
-                        href={url}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="text-primary underline"
-                      >
-                        {t('common.download')}
-                      </a>
-                    )}
-                    {canManage && (
-                      <Button
-                        size="sm"
-                        variant="destructive"
-                        onClick={() => onDelete(a)}
-                      >
-                        {t('common.delete')}
-                      </Button>
-                    )}
-                  </div>
-                </li>
-              );
-            })}
-          </ul>
-        </Card>
-      )}
+      {groups.map((g) => {
+        const filtered = items.filter((a) => a.category === g.cat);
+        return (
+          <Card key={g.cat}>
+            <CardHeader className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+              <div>
+                <CardTitle className="text-base">{g.title}</CardTitle>
+                <p className="text-xs text-muted-foreground">{g.description}</p>
+              </div>
+              {canManage && (
+                <label className="inline-flex">
+                  <input
+                    type="file"
+                    className="hidden"
+                    disabled={uploading}
+                    onChange={(e) => {
+                      const f = e.target.files?.[0];
+                      if (f) onUpload(f, g.cat);
+                      e.target.value = '';
+                    }}
+                  />
+                  <span
+                    className={
+                      'inline-flex h-9 cursor-pointer items-center justify-center rounded-md bg-primary px-3 text-sm font-medium text-primary-foreground hover:bg-primary/90 ' +
+                      (uploading ? 'pointer-events-none opacity-50' : '')
+                    }
+                  >
+                    {uploading ? t('common.uploading') : g.uploadCta}
+                  </span>
+                </label>
+              )}
+            </CardHeader>
+            <CardContent>
+              {filtered.length === 0 ? (
+                <p className="text-sm text-muted-foreground">{t('attachments.noFile')}</p>
+              ) : (
+                <ul className="divide-y">
+                  {filtered.map((a) => {
+                    const url = uploadUrl(a.filePath);
+                    return (
+                      <li key={a.id} className="flex items-center justify-between py-3 text-sm">
+                        <div className="min-w-0 flex-1">
+                          <p className="truncate font-medium">{a.fileName}</p>
+                          <p className="text-xs text-muted-foreground">
+                            {t('attachments.uploadedOn').replace('{date}', fmtDate(a.uploadedAt))}
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          {url && (
+                            <a
+                              href={url}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="text-primary underline"
+                            >
+                              {t('common.download')}
+                            </a>
+                          )}
+                          {canManage && (
+                            <Button
+                              size="sm"
+                              variant="destructive"
+                              onClick={() => onDelete(a)}
+                            >
+                              {t('common.delete')}
+                            </Button>
+                          )}
+                        </div>
+                      </li>
+                    );
+                  })}
+                </ul>
+              )}
+            </CardContent>
+          </Card>
+        );
+      })}
     </div>
   );
 }

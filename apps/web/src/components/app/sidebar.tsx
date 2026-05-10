@@ -6,6 +6,7 @@ import {
   ChevronRight,
   ClipboardList,
   FileText,
+  FolderArchive,
   GraduationCap,
   LayoutDashboard,
   LogOut,
@@ -53,6 +54,8 @@ const NAV: NavItem[] = [
     roles: ['SUPER_ADMIN'] },
   { href: '/templates', labelKey: 'templates', icon: FileText, group: 'library',
     roles: ['SUPER_ADMIN', 'ADMIN', 'COORDINATOR'] },
+  { href: '/attachments', labelKey: 'attachments', icon: FolderArchive, group: 'library',
+    roles: ['SUPER_ADMIN', 'ADMIN', 'COORDINATOR', 'TRAINER', 'STUDENT', 'CLIENT'] },
 ];
 
 const GROUP_LABELS: Record<NavItem['group'], string> = {
