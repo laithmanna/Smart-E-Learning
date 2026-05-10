@@ -9,12 +9,14 @@
 #   1. Set SUPERADMIN_EMAIL + SUPERADMIN_PASSWORD on the API service (marked sync:false below).
 #   2. Trigger a "Deploy → Clear build cache & deploy" so the pre-deploy seed runs.
 #
-# Free-tier notes:
-#   - Web services spin down after ~15 min idle; first hit cold-starts (~30s).
-#   - Free Postgres is deleted after 90 days of free-tier use.
-#   - Free-tier services do NOT support Disks → uploads are wiped on every deploy.
-#     If you need persistent uploads, upgrade the API service to Starter ($7/mo)
-#     and uncomment the `disk:` block below + change UPLOAD_DIR to /var/data/uploads.
+# Plan notes:
+#   - The API runs on Starter ($7/mo) because pre-deploy commands and Disks
+#     require a paid plan. The 1 GB Disk mounted at /var/data/uploads keeps
+#     user-uploaded files across deploys.
+#   - The Web stays on the free plan (spins down after ~15 min idle).
+#     Upgrade to starter if you want zero cold-starts.
+#   - Free Postgres is deleted after 90 days of free-tier use — upgrade to
+#     basic-256mb or higher to keep data permanently.
 
 databases:
   - name: smart-elearning-db
@@ -28,7 +30,7 @@ services:
   - type: web
     name: smart-elearning-api
     runtime: node
-    plan: free
+    plan: starter
     region: frankfurt
     rootDir: .
     healthCheckPath: /docs
@@ -39,8 +41,11 @@ services:
       pnpm --filter @sel/api exec prisma generate
       pnpm --filter @sel/api build
     preDeployCommand: |
+      mkdir -p /var/data/uploads/course-attachments /var/data/uploads/student-certificates /var/data/uploads/trainer-photos /var/data/uploads/trainer-cvs
       cd apps/api && pnpm exec prisma migrate deploy && pnpm prisma:seed || true
-    startCommand: pnpm --filter @sel/api start
+    startCommand: |
+      mkdir -p /var/data/uploads/course-attachments /var/data/uploads/student-certificates /var/data/uploads/trainer-photos /var/data/uploads/trainer-cvs
+      pnpm --filter @sel/api start
     envVars:
       - key: NODE_ENV
         value: production
@@ -59,17 +64,16 @@ services:
       - key: CORS_ORIGIN
         value: https://smart-elearning-web.onrender.com
       - key: UPLOAD_DIR
-        value: ./uploads
+        value: /var/data/uploads
       # Set these manually in the Render dashboard after the service is created:
       - key: SUPERADMIN_EMAIL
         sync: false
       - key: SUPERADMIN_PASSWORD
         sync: false
-    # Uncomment to persist uploads (requires Starter plan or higher):
-    # disk:
-    #   name: uploads
-    #   mountPath: /var/data
-    #   sizeGB: 1
+    disk:
+      name: uploads
+      mountPath: /var/data
+      sizeGB: 1
 
   # ─── Next.js Web ──────────────────────────────────────────────────────────
   - type: web
