@@ -13,14 +13,17 @@ import {
 import { FileInterceptor } from '@nestjs/platform-express';
 import { AttachmentCategory, Role } from '@prisma/client';
 import { diskStorage } from 'multer';
-import { extname, join } from 'path';
+import { extname } from 'path';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { Roles } from '../auth/decorators/roles.decorator';
 import type { AuthenticatedUser } from '../auth/types/jwt-payload.interface';
+import {
+  UPLOAD_SUBDIRS,
+  uploadDbPath,
+  uploadDestination,
+} from '../common/uploads';
 import { AttachmentsService } from './attachments.service';
 import { CoursesService } from './courses.service';
-
-const ATTACH_DIR = 'uploads/course-attachments';
 
 function safeFileName(originalName: string): string {
   const ext = extname(originalName).toLowerCase();
@@ -65,7 +68,8 @@ export class AttachmentsController {
   @UseInterceptors(
     FileInterceptor('file', {
       storage: diskStorage({
-        destination: (_req, _file, cb) => cb(null, join(process.cwd(), ATTACH_DIR)),
+        destination: (_req, _file, cb) =>
+          cb(null, uploadDestination(UPLOAD_SUBDIRS.courseAttachments)),
         filename: (_req, file, cb) => cb(null, safeFileName(file.originalname)),
       }),
       limits: { fileSize: 25 * 1024 * 1024 }, // 25 MB
@@ -77,7 +81,7 @@ export class AttachmentsController {
     file: Express.Multer.File,
     @Body('category') categoryRaw?: string,
   ) {
-    const relative = `${ATTACH_DIR}/${file.filename}`;
+    const relative = uploadDbPath(UPLOAD_SUBDIRS.courseAttachments, file.filename);
     const category = this.attachments.parseCategory(categoryRaw ?? AttachmentCategory.OTHER);
     return this.attachments.create(courseId, file.originalname, relative, category);
   }

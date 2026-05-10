@@ -1,7 +1,7 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { AttachmentCategory, Prisma } from '@prisma/client';
 import { unlink } from 'fs/promises';
-import { join } from 'path';
+import { uploadDiskPath } from '../common/uploads';
 import { PrismaService } from '../prisma/prisma.service';
 
 const VALID_CATEGORIES: AttachmentCategory[] = [
@@ -78,7 +78,7 @@ export class AttachmentsService {
     const att = await this.prisma.courseAttachment.findUnique({ where: { id } });
     if (!att) throw new NotFoundException('Attachment not found');
     try {
-      await unlink(join(process.cwd(), att.filePath));
+      await unlink(uploadDiskPath(att.filePath));
     } catch {
       // file already gone — ignore
     }

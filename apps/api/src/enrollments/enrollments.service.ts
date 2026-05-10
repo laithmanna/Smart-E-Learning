@@ -1,6 +1,6 @@
 import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import { unlink } from 'fs/promises';
-import { join } from 'path';
+import { uploadDiskPath } from '../common/uploads';
 import { PrismaService } from '../prisma/prisma.service';
 
 @Injectable()
@@ -30,7 +30,7 @@ export class EnrollmentsService {
     if (!existing) throw new NotFoundException('Enrollment not found');
     if (existing.certificateFilePath) {
       try {
-        await unlink(join(process.cwd(), existing.certificateFilePath));
+        await unlink(uploadDiskPath(existing.certificateFilePath));
       } catch {
         /* ignore */
       }
@@ -67,7 +67,7 @@ export class EnrollmentsService {
 
     if (existing.certificateFilePath) {
       try {
-        await unlink(join(process.cwd(), existing.certificateFilePath));
+        await unlink(uploadDiskPath(existing.certificateFilePath));
       } catch {
         /* ignore */
       }
@@ -95,7 +95,7 @@ export class EnrollmentsService {
     if (!existing) throw new NotFoundException('Enrollment not found');
     if (existing.certificateFilePath) {
       try {
-        await unlink(join(process.cwd(), existing.certificateFilePath));
+        await unlink(uploadDiskPath(existing.certificateFilePath));
       } catch {
         /* ignore */
       }

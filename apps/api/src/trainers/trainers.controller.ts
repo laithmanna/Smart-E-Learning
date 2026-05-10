@@ -14,14 +14,16 @@ import {
 import { FileInterceptor } from '@nestjs/platform-express';
 import { Role } from '@prisma/client';
 import { diskStorage } from 'multer';
-import { extname, join } from 'path';
+import { extname } from 'path';
 import { Roles } from '../auth/decorators/roles.decorator';
+import {
+  UPLOAD_SUBDIRS,
+  uploadDbPath,
+  uploadDestination,
+} from '../common/uploads';
 import { CreateTrainerDto } from './dto/create-trainer.dto';
 import { UpdateTrainerDto } from './dto/update-trainer.dto';
 import { TrainersService } from './trainers.service';
-
-const TRAINER_PHOTOS = 'uploads/trainer-photos';
-const TRAINER_CVS = 'uploads/trainer-cvs';
 
 function safeFileName(originalName: string): string {
   const ext = extname(originalName).toLowerCase();
@@ -68,7 +70,8 @@ export class TrainersController {
   @UseInterceptors(
     FileInterceptor('file', {
       storage: diskStorage({
-        destination: (_req, _file, cb) => cb(null, join(process.cwd(), TRAINER_PHOTOS)),
+        destination: (_req, _file, cb) =>
+          cb(null, uploadDestination(UPLOAD_SUBDIRS.trainerPhotos)),
         filename: (_req, file, cb) => cb(null, safeFileName(file.originalname)),
       }),
       limits: { fileSize: 5 * 1024 * 1024 }, // 5 MB
@@ -85,7 +88,7 @@ export class TrainersController {
     )
     file: Express.Multer.File,
   ) {
-    const relative = `${TRAINER_PHOTOS}/${file.filename}`;
+    const relative = uploadDbPath(UPLOAD_SUBDIRS.trainerPhotos, file.filename);
     return this.trainers.setPhoto(id, relative);
   }
 
@@ -94,7 +97,8 @@ export class TrainersController {
   @UseInterceptors(
     FileInterceptor('file', {
       storage: diskStorage({
-        destination: (_req, _file, cb) => cb(null, join(process.cwd(), TRAINER_CVS)),
+        destination: (_req, _file, cb) =>
+          cb(null, uploadDestination(UPLOAD_SUBDIRS.trainerCvs)),
         filename: (_req, file, cb) => cb(null, safeFileName(file.originalname)),
       }),
       limits: { fileSize: 10 * 1024 * 1024 }, // 10 MB
@@ -111,7 +115,7 @@ export class TrainersController {
     )
     file: Express.Multer.File,
   ) {
-    const relative = `${TRAINER_CVS}/${file.filename}`;
+    const relative = uploadDbPath(UPLOAD_SUBDIRS.trainerCvs, file.filename);
     return this.trainers.setCv(id, relative);
   }
 }

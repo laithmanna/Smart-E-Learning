@@ -1,8 +1,8 @@
 import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import { Role } from '@prisma/client';
 import { unlink } from 'fs/promises';
-import { join } from 'path';
 import { PasswordService } from '../common/password.service';
+import { uploadDiskPath } from '../common/uploads';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateTrainerDto } from './dto/create-trainer.dto';
 import { UpdateTrainerDto } from './dto/update-trainer.dto';
@@ -100,7 +100,7 @@ export class TrainersService {
   private async deleteFileIfExists(relativePath: string | null) {
     if (!relativePath) return;
     try {
-      await unlink(join(process.cwd(), relativePath));
+      await unlink(uploadDiskPath(relativePath));
     } catch {
       // file already gone — ignore
     }

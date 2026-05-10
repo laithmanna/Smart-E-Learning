@@ -4,8 +4,8 @@ import { ConfigService } from '@nestjs/config';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import cookieParser from 'cookie-parser';
-import { join } from 'path';
 import { AppModule } from './app.module';
+import { UPLOADS_ROOT, ensureUploadDirs } from './common/uploads';
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
@@ -25,8 +25,9 @@ async function bootstrap() {
     credentials: true,
   });
 
-  const uploadDir = config.get<string>('UPLOAD_DIR', './uploads');
-  app.useStaticAssets(join(process.cwd(), uploadDir), { prefix: '/uploads/' });
+  // Ensure upload directories exist before mounting static assets / accepting uploads.
+  ensureUploadDirs();
+  app.useStaticAssets(UPLOADS_ROOT, { prefix: '/uploads/' });
 
   // Swagger / OpenAPI
   const swaggerConfig = new DocumentBuilder()
@@ -39,9 +40,10 @@ async function bootstrap() {
   SwaggerModule.setup('docs', app, document);
 
   const port = config.get<number>('PORT', 3001);
-  await app.listen(port);
+  await app.listen(port, '0.0.0.0');
   console.log(`API listening on http://localhost:${port}/api`);
   console.log(`API docs:        http://localhost:${port}/docs`);
+  console.log(`Uploads root:    ${UPLOADS_ROOT}`);
 }
 
 bootstrap();

@@ -15,17 +15,21 @@ import {
 import { FileInterceptor } from '@nestjs/platform-express';
 import { Role } from '@prisma/client';
 import { diskStorage, memoryStorage } from 'multer';
-import { extname, join } from 'path';
+import { extname } from 'path';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { Roles } from '../auth/decorators/roles.decorator';
 import type { AuthenticatedUser } from '../auth/types/jwt-payload.interface';
+import {
+  UPLOAD_SUBDIRS,
+  uploadDbPath,
+  uploadDestination,
+} from '../common/uploads';
 import { CoursesService } from '../courses/courses.service';
 import { CreateEnrollmentDto } from './dto/create-enrollment.dto';
 import { EnrollmentsService } from './enrollments.service';
 import { ExcelImportService } from './excel-import.service';
 
 const XLSX_MIME = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
-const CERT_DIR = 'uploads/student-certificates';
 
 function safeFileName(originalName: string): string {
   const ext = extname(originalName).toLowerCase();
@@ -87,7 +91,8 @@ export class EnrollmentsController {
   @UseInterceptors(
     FileInterceptor('file', {
       storage: diskStorage({
-        destination: (_req, _file, cb) => cb(null, join(process.cwd(), CERT_DIR)),
+        destination: (_req, _file, cb) =>
+          cb(null, uploadDestination(UPLOAD_SUBDIRS.studentCertificates)),
         filename: (_req, file, cb) => cb(null, safeFileName(file.originalname)),
       }),
       limits: { fileSize: 10 * 1024 * 1024 }, // 10 MB
@@ -99,7 +104,7 @@ export class EnrollmentsController {
     @UploadedFile(new ParseFilePipeBuilder().build({ fileIsRequired: true }))
     file: Express.Multer.File,
   ) {
-    const relative = `${CERT_DIR}/${file.filename}`;
+    const relative = uploadDbPath(UPLOAD_SUBDIRS.studentCertificates, file.filename);
     return this.enrollments.setCertificate(
       courseId,
       studentId,

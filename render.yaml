@@ -40,12 +40,8 @@ services:
       pnpm install --frozen-lockfile --prod=false
       pnpm --filter @sel/api exec prisma generate
       pnpm --filter @sel/api build
-    preDeployCommand: |
-      mkdir -p /var/data/uploads/course-attachments /var/data/uploads/student-certificates /var/data/uploads/trainer-photos /var/data/uploads/trainer-cvs
-      cd apps/api && pnpm exec prisma migrate deploy && pnpm prisma:seed || true
-    startCommand: |
-      mkdir -p /var/data/uploads/course-attachments /var/data/uploads/student-certificates /var/data/uploads/trainer-photos /var/data/uploads/trainer-cvs
-      pnpm --filter @sel/api start
+    preDeployCommand: cd apps/api && pnpm exec prisma migrate deploy && pnpm prisma:seed
+    startCommand: pnpm --filter @sel/api start
     envVars:
       - key: NODE_ENV
         value: production
